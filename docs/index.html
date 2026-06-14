@@ -3,25 +3,61 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <title>QR8 — INT8-initialized Cholesky-QR with FP64 refinement</title>
+
   <meta
     name="description"
     content="QR8: INT8-initialized Cholesky-QR with FP64 refinement."
   />
 
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["\\(", "\\)"]],
+        displayMath: [["\\[", "\\]"]]
+      },
+      svg: {
+        fontCache: "global"
+      }
+    };
+  </script>
+  <script
+    defer
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+  </script>
+
   <style>
     :root {
       --paper: #f4ecd9;
-      --paper-soft: #fbf6ea;
+      --paper-light: #fbf6ea;
+      --paper-deep: #eadbbc;
+
       --ink: #24180f;
-      --ink-soft: #5f4b38;
+      --ink-soft: #604d39;
+
       --rule: #c9b98f;
       --rule-dark: #9b7a45;
-      --accent: #7a3b22;
+
       --gold: #9b6b2f;
+      --castile: #7a2e26;
+      --azulejo: #315d72;
+      --azulejo-soft: rgba(49, 93, 114, 0.36);
+
       --shadow: rgba(36, 24, 15, 0.08);
-      --mono: "Courier New", Courier, monospace;
+
       --serif: Georgia, "Times New Roman", Times, serif;
+      --display: "Cormorant Garamond", Georgia, "Times New Roman", Times, serif;
+      --mono: "Courier New", Courier, monospace;
+      --nastaliq: "Noto Nastaliq Urdu", "IranNastaliq", "Noto Naskh Arabic",
+        "Geeza Pro", Tahoma, serif;
     }
 
     * {
@@ -30,16 +66,17 @@
 
     html {
       scroll-behavior: smooth;
+      scroll-padding-top: 1rem;
     }
 
     body {
       margin: 0;
       color: var(--ink);
       background:
-        radial-gradient(circle at top, rgba(255, 255, 255, 0.55), transparent 34rem),
-        linear-gradient(180deg, #f7f0df 0%, var(--paper) 45%, #efe3c7 100%);
+        radial-gradient(circle at top, rgba(255, 255, 255, 0.58), transparent 34rem),
+        linear-gradient(180deg, #f8f1df 0%, var(--paper) 46%, var(--paper-deep) 100%);
       font-family: var(--serif);
-      line-height: 1.65;
+      line-height: 1.68;
     }
 
     body::before {
@@ -47,16 +84,21 @@
       position: fixed;
       inset: 0;
       pointer-events: none;
-      opacity: 0.16;
+      opacity: 0.13;
       background-image:
         linear-gradient(rgba(36, 24, 15, 0.035) 1px, transparent 1px),
         linear-gradient(90deg, rgba(36, 24, 15, 0.025) 1px, transparent 1px);
-      background-size: 44px 44px;
+      background-size: 46px 46px;
       mix-blend-mode: multiply;
     }
 
+    ::selection {
+      color: var(--paper-light);
+      background: var(--castile);
+    }
+
     a {
-      color: var(--accent);
+      color: var(--castile);
       text-decoration-thickness: 1px;
       text-underline-offset: 0.18em;
     }
@@ -66,12 +108,12 @@
     }
 
     .page {
-      width: min(980px, calc(100% - 32px));
+      width: min(1020px, calc(100% - 32px));
       margin: 28px auto;
-      padding: clamp(22px, 4vw, 56px);
-      background: rgba(251, 246, 234, 0.82);
+      padding: clamp(24px, 4.5vw, 62px);
+      background: rgba(251, 246, 234, 0.86);
       border: 1px solid var(--rule);
-      box-shadow: 0 20px 60px var(--shadow);
+      box-shadow: 0 22px 64px var(--shadow);
       position: relative;
     }
 
@@ -90,50 +132,146 @@
 
     header {
       text-align: center;
-      padding: 34px 0 42px;
+      padding: 34px 0 44px;
       border-bottom: 1px solid var(--rule);
     }
 
     .small-caps {
-      font-size: 0.78rem;
-      letter-spacing: 0.18em;
+      font-family: var(--display);
+      font-size: 0.88rem;
+      letter-spacing: 0.2em;
       text-transform: uppercase;
       color: var(--ink-soft);
     }
 
-    .persian-line {
-      margin-top: 12px;
-      font-size: 0.92rem;
-      color: var(--ink-soft);
-      letter-spacing: 0.08em;
+    .ornament {
+      width: 118px;
+      height: 18px;
+      margin: 0 auto 16px;
+      position: relative;
+    }
+
+    .ornament::before,
+    .ornament::after {
+      content: "";
+      position: absolute;
+      top: 8px;
+      width: 44px;
+      height: 1px;
+      background: var(--rule-dark);
+    }
+
+    .ornament::before {
+      left: 0;
+    }
+
+    .ornament::after {
+      right: 0;
+    }
+
+    .ornament span {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 10px;
+      height: 10px;
+      border: 1px solid var(--rule-dark);
+      transform: translate(-50%, -50%) rotate(45deg);
+      background: rgba(244, 236, 217, 0.95);
+    }
+
+    .tile-rule {
+      width: min(360px, 80%);
+      height: 10px;
+      margin: 0 auto 22px;
+      border-top: 1px solid rgba(49, 93, 114, 0.38);
+      border-bottom: 1px solid rgba(122, 46, 38, 0.28);
+      background:
+        repeating-linear-gradient(
+          90deg,
+          transparent 0 14px,
+          rgba(49, 93, 114, 0.38) 14px 15px,
+          transparent 15px 29px,
+          rgba(155, 107, 47, 0.34) 29px 30px,
+          transparent 30px 44px,
+          rgba(122, 46, 38, 0.30) 44px 45px
+        );
     }
 
     h1 {
-      margin: 18px 0 10px;
-      font-size: clamp(5rem, 16vw, 10.5rem);
-      line-height: 0.86;
+      margin: 18px 0 8px;
+      font-family: var(--display);
+      font-size: clamp(5.8rem, 17vw, 12rem);
+      line-height: 0.82;
       font-weight: 500;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.07em;
       color: var(--ink);
     }
 
     .subtitle {
-      max-width: 680px;
+      max-width: 720px;
       margin: 0 auto;
-      font-size: clamp(1.15rem, 2.6vw, 1.7rem);
-      line-height: 1.35;
+      font-family: var(--display);
+      font-size: clamp(1.28rem, 2.8vw, 1.95rem);
+      line-height: 1.28;
+      font-weight: 500;
       color: var(--ink);
     }
 
     .note {
-      max-width: 620px;
+      max-width: 660px;
       margin: 18px auto 0;
       color: var(--ink-soft);
+      font-size: 1.02rem;
+    }
+
+    .culture-band {
+      width: min(680px, 100%);
+      margin: 26px auto 0;
+      padding: 14px 0 12px;
+      border-top: 1px solid var(--azulejo-soft);
+      border-bottom: 1px solid rgba(122, 46, 38, 0.22);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .spanish-line {
+      font-family: var(--display);
       font-size: 1rem;
+      letter-spacing: 0.15em;
+      text-transform: lowercase;
+      color: var(--azulejo);
+      font-variant: small-caps;
+    }
+
+    .culture-mark {
+      color: var(--gold);
+      font-size: 0.95rem;
+    }
+
+    .persian-calligraphy {
+      font-family: var(--nastaliq);
+      font-size: clamp(1.45rem, 4vw, 2.15rem);
+      line-height: 2.1;
+      color: var(--castile);
+      direction: rtl;
+      unicode-bidi: isolate;
+      white-space: nowrap;
+    }
+
+    .dedication {
+      margin: 14px auto 0;
+      font-family: var(--display);
+      font-size: 1.02rem;
+      color: var(--ink-soft);
+      font-style: italic;
     }
 
     nav {
-      margin-top: 28px;
+      margin-top: 30px;
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
@@ -145,7 +283,7 @@
       padding: 8px 14px;
       border: 1px solid var(--rule);
       color: var(--ink);
-      background: rgba(244, 236, 217, 0.45);
+      background: rgba(244, 236, 217, 0.5);
       text-decoration: none;
       font-size: 0.94rem;
     }
@@ -156,11 +294,11 @@
     }
 
     main {
-      padding-top: 26px;
+      padding-top: 28px;
     }
 
     section {
-      padding: 30px 0;
+      padding: 32px 0;
       border-bottom: 1px solid rgba(201, 185, 143, 0.75);
     }
 
@@ -171,14 +309,17 @@
 
     h2 {
       margin: 0 0 14px;
-      font-size: clamp(1.45rem, 3vw, 2rem);
+      font-family: var(--display);
+      font-size: clamp(1.65rem, 3vw, 2.25rem);
       font-weight: 500;
-      line-height: 1.25;
+      line-height: 1.2;
+      color: var(--ink);
     }
 
     h3 {
       margin: 22px 0 8px;
-      font-size: 1.12rem;
+      font-family: var(--display);
+      font-size: 1.24rem;
       font-weight: 600;
     }
 
@@ -194,7 +335,7 @@
     .two-column {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 34px;
+      gap: 36px;
       align-items: start;
     }
 
@@ -208,26 +349,26 @@
       margin-top: 0;
     }
 
+    .equation {
+      margin: 20px 0;
+      padding: 16px 18px;
+      text-align: center;
+      border-top: 1px solid rgba(201, 185, 143, 0.72);
+      border-bottom: 1px solid rgba(201, 185, 143, 0.72);
+      font-size: 1.08rem;
+      color: var(--ink);
+    }
+
     .algorithm {
       margin: 18px 0 0;
       padding: 18px;
       border-left: 3px solid var(--gold);
-      background: rgba(255, 252, 242, 0.48);
+      background: rgba(255, 252, 242, 0.52);
       font-family: var(--mono);
       font-size: 0.92rem;
       line-height: 1.55;
       overflow-x: auto;
       white-space: pre;
-    }
-
-    .equation {
-      margin: 18px 0;
-      padding: 14px 18px;
-      text-align: center;
-      border-top: 1px solid rgba(201, 185, 143, 0.7);
-      border-bottom: 1px solid rgba(201, 185, 143, 0.7);
-      font-size: 1.08rem;
-      color: var(--ink);
     }
 
     .muted {
@@ -251,7 +392,22 @@
 
     input[type="range"] {
       width: 100%;
-      accent-color: var(--accent);
+      accent-color: var(--castile);
+    }
+
+    .bar {
+      margin-top: 16px;
+      height: 12px;
+      border: 1px solid var(--rule);
+      background: rgba(201, 185, 143, 0.25);
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 25%;
+      background: linear-gradient(90deg, var(--azulejo), var(--gold), var(--castile));
+      transition: width 180ms ease;
     }
 
     .toy-output {
@@ -278,32 +434,9 @@
     .measure .value {
       display: block;
       margin-top: 6px;
-      font-size: 1.35rem;
+      font-family: var(--display);
+      font-size: 1.45rem;
       color: var(--ink);
-    }
-
-    .bar {
-      margin-top: 16px;
-      height: 12px;
-      border: 1px solid var(--rule);
-      background: rgba(201, 185, 143, 0.25);
-      overflow: hidden;
-    }
-
-    .bar-fill {
-      height: 100%;
-      width: 25%;
-      background: linear-gradient(90deg, var(--gold), var(--accent));
-      transition: width 180ms ease;
-    }
-
-    .list {
-      margin: 12px 0 0;
-      padding-left: 20px;
-    }
-
-    .list li {
-      margin-bottom: 6px;
     }
 
     .status-list {
@@ -322,11 +455,27 @@
     .status strong {
       display: block;
       margin-bottom: 4px;
+      font-family: var(--display);
+      font-size: 1.08rem;
       font-weight: 600;
     }
 
+    .acknowledgment {
+      border-left: 3px solid var(--azulejo);
+      padding: 14px 18px;
+      background: rgba(49, 93, 114, 0.055);
+    }
+
+    .acknowledgment .spanish-thanks {
+      margin-top: 10px;
+      font-family: var(--display);
+      font-size: 1.2rem;
+      color: var(--azulejo);
+      font-style: italic;
+    }
+
     footer {
-      margin-top: 28px;
+      margin-top: 30px;
       padding-top: 20px;
       border-top: 1px solid var(--rule);
       color: var(--ink-soft);
@@ -337,45 +486,17 @@
       flex-wrap: wrap;
     }
 
-    .ornament {
-      width: 92px;
-      height: 18px;
-      margin: 0 auto 16px;
-      position: relative;
-    }
-
-    .ornament::before,
-    .ornament::after {
-      content: "";
-      position: absolute;
-      top: 8px;
-      width: 34px;
-      height: 1px;
-      background: var(--rule-dark);
-    }
-
-    .ornament::before {
-      left: 0;
-    }
-
-    .ornament::after {
-      right: 0;
-    }
-
-    .ornament span {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      width: 10px;
-      height: 10px;
-      border: 1px solid var(--rule-dark);
-      transform: translate(-50%, -50%) rotate(45deg);
-      background: rgba(244, 236, 217, 0.9);
+    .footer-calligraphy {
+      font-family: var(--nastaliq);
+      color: var(--castile);
+      line-height: 2;
+      direction: rtl;
+      unicode-bidi: isolate;
     }
 
     @media (max-width: 760px) {
       .page {
-        width: min(100% - 18px, 980px);
+        width: min(100% - 18px, 1020px);
         margin: 9px auto;
         padding: 24px 18px;
       }
@@ -407,8 +528,50 @@
         width: 100%;
       }
 
+      .culture-band {
+        gap: 8px;
+      }
+
+      .spanish-line {
+        width: 100%;
+      }
+
+      .culture-mark {
+        display: none;
+      }
+
       footer {
         display: block;
+      }
+    }
+
+    @media print {
+      body {
+        background: white;
+      }
+
+      body::before {
+        display: none;
+      }
+
+      .page {
+        width: auto;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        box-shadow: none;
+        background: white;
+      }
+
+      .page::before,
+      nav,
+      .toy,
+      .tile-rule {
+        display: none;
+      }
+
+      section {
+        break-inside: avoid;
       }
     }
   </style>
@@ -419,6 +582,7 @@
     <div class="inner">
       <header>
         <div class="ornament" aria-hidden="true"><span></span></div>
+        <div class="tile-rule" aria-hidden="true"></div>
 
         <div class="small-caps">A numerical manuscript</div>
 
@@ -433,14 +597,23 @@
           high-precision correction, and a quiet concern for orthogonality.
         </p>
 
-        <div class="persian-line" lang="fa" dir="rtl">
-          جبر · عدد · پایداری
+        <div class="culture-band" aria-label="Persian and Spanish design note">
+          <span class="spanish-line">álgebra · número · estabilidad</span>
+          <span class="culture-mark">◇</span>
+          <span class="persian-calligraphy" lang="fa" dir="rtl">
+            جبر · عدد · پایداری
+          </span>
         </div>
+
+        <p class="dedication">
+          Con gratitud a los coautores españoles.
+        </p>
 
         <nav aria-label="Main navigation">
           <a href="#abstract">abstract</a>
           <a href="#method">method</a>
           <a href="#toy">conditioning note</a>
+          <a href="#acknowledgment">acknowledgment</a>
           <a href="#status">status</a>
           <a href="LICENSE.txt">Beerware license</a>
         </nav>
@@ -463,7 +636,7 @@
           </p>
 
           <div class="equation">
-            A \(\approx\) Q R, with orthogonality repaired by refinement.
+            \( A \approx QR \), with orthogonality repaired by refinement.
           </div>
         </section>
 
@@ -522,14 +695,15 @@ Report:
 
           <p>
             Cholesky-QR is sensitive to conditioning because the Gram matrix
-            squares the condition number. The small control below is only a
-            visual note: it shows why refinement becomes more important as the
-            matrix becomes harder.
+            squares the condition number. The control below is only a visual
+            note: it shows why refinement becomes more important as the matrix
+            becomes harder.
           </p>
 
           <div class="toy">
             <div class="slider-row">
               <label for="kappaSlider">condition level</label>
+
               <input
                 id="kappaSlider"
                 type="range"
@@ -538,6 +712,7 @@ Report:
                 step="1"
                 value="4"
               />
+
               <strong id="kappaLabel">10⁴</strong>
             </div>
 
@@ -564,8 +739,25 @@ Report:
 
             <p class="muted" style="margin-top: 16px;">
               This is not a benchmark. It is a reminder: if \( \kappa(A) \)
-              grows, then \( \kappa(A^T A) \) grows roughly as
+              grows, then \( \kappa(A^\mathsf{T}A) \) grows roughly as
               \( \kappa(A)^2 \).
+            </p>
+          </div>
+        </section>
+
+        <section id="acknowledgment">
+          <h2>Acknowledgment</h2>
+
+          <div class="acknowledgment">
+            <p>
+              The page uses a restrained Persian-Spanish manuscript tone:
+              Persian calligraphy for the algebraic root of the work, and a
+              muted azulejo-blue rule in appreciation of the Spanish authors
+              and collaborators.
+            </p>
+
+            <p class="spanish-thanks">
+              Con gratitud a los coautores españoles por su buen trabajo.
             </p>
           </div>
         </section>
@@ -621,6 +813,7 @@ Report:
       <footer>
         <span>QR8 — INT8-initialized Cholesky-QR with FP64 refinement.</span>
         <span>Licensed under QR8 Beerware, Revision 42.</span>
+        <span class="footer-calligraphy" lang="fa" dir="rtl">جبر · عدد · پایداری</span>
       </footer>
     </div>
   </div>
@@ -635,6 +828,7 @@ Report:
 
     function updateToy() {
       const p = Number(slider.value);
+
       kappaLabel.textContent = "10" + superscript(p);
       gramValue.textContent = "10" + superscript(2 * p);
       barFill.style.width = Math.max(8, (p / 12) * 100) + "%";
