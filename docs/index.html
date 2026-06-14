@@ -207,7 +207,21 @@
       color: var(--ink);
       font-variant-numeric: lining-nums;
     }
-
+h1::after {
+  content: "";
+  display: block;
+  width: min(280px, 62%);
+  height: 1px;
+  margin: 26px auto 22px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--azulejo),
+    var(--gold),
+    var(--castile),
+    transparent
+  );
+}
     .subtitle {
       max-width: 720px;
       margin: 0 auto;
