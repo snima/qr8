@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;600&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;600&display=swap"
     rel="stylesheet"
   />
 
@@ -54,8 +54,8 @@
       --shadow: rgba(36, 24, 15, 0.08);
 
       --serif: Georgia, "Times New Roman", Times, serif;
-      --display: "Cormorant Garamond", Georgia, "Times New Roman", Times, serif;
       --mono: "Courier New", Courier, monospace;
+      --hand: "Bradley Hand", "Segoe Print", "Lucida Handwriting", cursive;
       --nastaliq: "Noto Nastaliq Urdu", "IranNastaliq", "Noto Naskh Arabic",
         "Geeza Pro", Tahoma, serif;
     }
@@ -137,8 +137,7 @@
     }
 
     .small-caps {
-      font-family: var(--display);
-      font-size: 0.88rem;
+      font-size: 0.82rem;
       letter-spacing: 0.2em;
       text-transform: uppercase;
       color: var(--ink-soft);
@@ -200,20 +199,20 @@
 
     h1 {
       margin: 18px 0 8px;
-      font-family: var(--display);
+      font-family: Georgia, "Times New Roman", Times, serif;
       font-size: clamp(5.8rem, 17vw, 12rem);
       line-height: 0.82;
-      font-weight: 500;
-      letter-spacing: 0.07em;
+      font-weight: 700;
+      letter-spacing: 0.045em;
       color: var(--ink);
+      font-variant-numeric: lining-nums;
     }
 
     .subtitle {
       max-width: 720px;
       margin: 0 auto;
-      font-family: var(--display);
-      font-size: clamp(1.28rem, 2.8vw, 1.95rem);
-      line-height: 1.28;
+      font-size: clamp(1.18rem, 2.6vw, 1.72rem);
+      line-height: 1.35;
       font-weight: 500;
       color: var(--ink);
     }
@@ -239,8 +238,7 @@
     }
 
     .spanish-line {
-      font-family: var(--display);
-      font-size: 1rem;
+      font-size: 0.98rem;
       letter-spacing: 0.15em;
       text-transform: lowercase;
       color: var(--azulejo);
@@ -260,14 +258,6 @@
       direction: rtl;
       unicode-bidi: isolate;
       white-space: nowrap;
-    }
-
-    .dedication {
-      margin: 14px auto 0;
-      font-family: var(--display);
-      font-size: 1.02rem;
-      color: var(--ink-soft);
-      font-style: italic;
     }
 
     nav {
@@ -309,17 +299,15 @@
 
     h2 {
       margin: 0 0 14px;
-      font-family: var(--display);
-      font-size: clamp(1.65rem, 3vw, 2.25rem);
+      font-size: clamp(1.55rem, 3vw, 2.15rem);
       font-weight: 500;
-      line-height: 1.2;
+      line-height: 1.22;
       color: var(--ink);
     }
 
     h3 {
       margin: 22px 0 8px;
-      font-family: var(--display);
-      font-size: 1.24rem;
+      font-size: 1.18rem;
       font-weight: 600;
     }
 
@@ -373,6 +361,85 @@
 
     .muted {
       color: var(--ink-soft);
+    }
+
+    .sketch-card {
+      margin-top: 18px;
+      padding: 14px;
+      border: 1px solid var(--rule);
+      background:
+        linear-gradient(rgba(255, 252, 242, 0.64), rgba(255, 252, 242, 0.64)),
+        repeating-linear-gradient(
+          0deg,
+          transparent 0 33px,
+          rgba(49, 93, 114, 0.08) 33px 34px
+        );
+    }
+
+    .sketch-card svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .sketch-title {
+      font-family: var(--hand);
+      font-size: 30px;
+      fill: var(--ink);
+    }
+
+    .sketch-label {
+      font-family: var(--hand);
+      font-size: 21px;
+      fill: var(--ink-soft);
+    }
+
+    .sketch-small {
+      font-family: var(--hand);
+      font-size: 17px;
+      fill: var(--ink-soft);
+    }
+
+    .sketch-line {
+      fill: none;
+      stroke: var(--ink);
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .sketch-line-soft {
+      fill: none;
+      stroke: var(--ink-soft);
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.72;
+    }
+
+    .sketch-blue {
+      fill: rgba(49, 93, 114, 0.08);
+      stroke: var(--azulejo);
+      stroke-width: 2;
+      stroke-linejoin: round;
+    }
+
+    .sketch-red {
+      fill: rgba(122, 46, 38, 0.07);
+      stroke: var(--castile);
+      stroke-width: 2;
+      stroke-linejoin: round;
+    }
+
+    .sketch-gold {
+      fill: rgba(155, 107, 47, 0.08);
+      stroke: var(--gold);
+      stroke-width: 2;
+      stroke-linejoin: round;
+    }
+
+    .rough {
+      filter: url(#roughPaper);
     }
 
     .toy {
@@ -434,14 +501,13 @@
     .measure .value {
       display: block;
       margin-top: 6px;
-      font-family: var(--display);
-      font-size: 1.45rem;
+      font-size: 1.35rem;
       color: var(--ink);
     }
 
     .status-list {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 12px;
       margin-top: 18px;
     }
@@ -455,23 +521,8 @@
     .status strong {
       display: block;
       margin-bottom: 4px;
-      font-family: var(--display);
-      font-size: 1.08rem;
+      font-size: 1.02rem;
       font-weight: 600;
-    }
-
-    .acknowledgment {
-      border-left: 3px solid var(--azulejo);
-      padding: 14px 18px;
-      background: rgba(49, 93, 114, 0.055);
-    }
-
-    .acknowledgment .spanish-thanks {
-      margin-top: 10px;
-      font-family: var(--display);
-      font-size: 1.2rem;
-      color: var(--azulejo);
-      font-style: italic;
     }
 
     footer {
@@ -492,6 +543,12 @@
       line-height: 2;
       direction: rtl;
       unicode-bidi: isolate;
+    }
+
+    @media (max-width: 900px) {
+      .status-list {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
 
     @media (max-width: 760px) {
@@ -538,6 +595,18 @@
 
       .culture-mark {
         display: none;
+      }
+
+      .sketch-title {
+        font-size: 24px;
+      }
+
+      .sketch-label {
+        font-size: 18px;
+      }
+
+      .sketch-small {
+        font-size: 15px;
       }
 
       footer {
@@ -605,15 +674,11 @@
           </span>
         </div>
 
-        <p class="dedication">
-          Con gratitud a los coautores españoles.
-        </p>
-
         <nav aria-label="Main navigation">
           <a href="#abstract">abstract</a>
+          <a href="#sketch">3D sketch</a>
           <a href="#method">method</a>
           <a href="#toy">conditioning note</a>
-          <a href="#acknowledgment">acknowledgment</a>
           <a href="#status">status</a>
           <a href="LICENSE.txt">Beerware license</a>
         </nav>
@@ -637,6 +702,219 @@
 
           <div class="equation">
             \( A \approx QR \), with orthogonality repaired by refinement.
+          </div>
+        </section>
+
+        <section id="sketch">
+          <h2>3D working sketch</h2>
+
+          <p>
+            The drawing below is intentionally rough. It gives the page a
+            notebook feeling while keeping the object scientific: a matrix
+            scaffold, a triangular factor, and a refined orthogonal sheet.
+          </p>
+
+          <div class="sketch-card">
+            <svg
+              viewBox="0 0 920 420"
+              role="img"
+              aria-labelledby="sketchTitle sketchDesc"
+              xmlns="http://www.w3.org/2000/svg">
+              <title id="sketchTitle">Hand-sketched 3D QR8 workflow</title>
+              <desc id="sketchDesc">
+                A hand-drawn 3D sketch of the QR8 path from an INT8 scaffold to
+                a triangular factor and an FP64-refined orthogonal sheet.
+              </desc>
+
+              <defs>
+                <filter id="roughPaper">
+                  <feTurbulence
+                    type="fractalNoise"
+                    baseFrequency="0.018"
+                    numOctaves="2"
+                    seed="8"
+                    result="noise"
+                  />
+                  <feDisplacementMap
+                    in="SourceGraphic"
+                    in2="noise"
+                    scale="1.15"
+                  />
+                </filter>
+
+                <marker
+                  id="arrowHead"
+                  markerWidth="10"
+                  markerHeight="10"
+                  refX="8"
+                  refY="3"
+                  orient="auto"
+                  markerUnits="strokeWidth">
+                  <path d="M0,0 L0,6 L9,3 z" fill="#24180f" />
+                </marker>
+              </defs>
+
+              <rect
+                x="18"
+                y="18"
+                width="884"
+                height="384"
+                rx="2"
+                fill="none"
+                stroke="rgba(155, 122, 69, 0.35)"
+                stroke-width="1.2"
+              />
+
+              <g class="rough">
+                <text x="58" y="62" class="sketch-title">
+                  QR8 notebook view
+                </text>
+
+                <text x="62" y="91" class="sketch-small">
+                  low precision scaffold → triangular spine → FP64 check
+                </text>
+
+                <!-- Left 3D block: A -->
+                <polygon
+                  class="sketch-blue"
+                  points="88,136 222,164 222,292 88,264"
+                />
+                <polygon
+                  class="sketch-gold"
+                  points="88,136 143,92 277,120 222,164"
+                />
+                <polygon
+                  class="sketch-red"
+                  points="222,164 277,120 277,248 222,292"
+                />
+
+                <path
+                  class="sketch-line-soft"
+                  d="M115 142 L115 270 M142 148 L142 276 M169 154 L169 282 M196 159 L196 287"
+                />
+                <path
+                  class="sketch-line-soft"
+                  d="M89 166 L222 194 M89 197 L222 225 M89 228 L222 256"
+                />
+                <path
+                  class="sketch-line"
+                  d="M88 136 L222 164 L277 120 M222 164 L222 292 L88 264 Z M222 292 L277 248 L277 120"
+                />
+
+                <text x="116" y="330" class="sketch-label">
+                  A
+                </text>
+                <text x="74" y="354" class="sketch-small">
+                  INT8-oriented scaffold
+                </text>
+
+                <!-- Arrow to R -->
+                <path
+                  class="sketch-line"
+                  marker-end="url(#arrowHead)"
+                  d="M306 204 C340 191, 363 191, 394 204"
+                />
+                <text x="304" y="175" class="sketch-small">
+                  form Gram structure
+                </text>
+
+                <!-- Center triangular factor: R -->
+                <polygon
+                  class="sketch-gold"
+                  points="433,126 592,160 433,292"
+                />
+                <polygon
+                  class="sketch-red"
+                  points="433,126 483,94 642,128 592,160"
+                />
+                <polygon
+                  class="sketch-blue"
+                  points="592,160 642,128 483,260 433,292"
+                />
+
+                <path
+                  class="sketch-line-soft"
+                  d="M457 131 L457 272 M481 136 L481 252 M505 141 L505 232 M529 146 L529 211 M553 151 L553 191"
+                />
+                <path
+                  class="sketch-line-soft"
+                  d="M435 158 L565 185 M435 190 L536 211 M435 222 L508 237 M435 254 L481 264"
+                />
+                <path
+                  class="sketch-line"
+                  d="M433 126 L592 160 L433 292 Z M433 126 L483 94 L642 128 L592 160 M642 128 L483 260 L433 292"
+                />
+
+                <text x="490" y="330" class="sketch-label">
+                  R
+                </text>
+                <text x="424" y="354" class="sketch-small">
+                  triangular Cholesky factor
+                </text>
+
+                <!-- Arrow to Q -->
+                <path
+                  class="sketch-line"
+                  marker-end="url(#arrowHead)"
+                  d="M654 204 C680 190, 704 190, 730 204"
+                />
+                <text x="653" y="175" class="sketch-small">
+                  solve and refine
+                </text>
+
+                <!-- Right 3D sheet: Q -->
+                <polygon
+                  class="sketch-blue"
+                  points="746,116 836,138 836,294 746,272"
+                />
+                <polygon
+                  class="sketch-gold"
+                  points="746,116 782,86 872,108 836,138"
+                />
+                <polygon
+                  class="sketch-red"
+                  points="836,138 872,108 872,264 836,294"
+                />
+
+                <path
+                  class="sketch-line-soft"
+                  d="M767 121 L767 276 M789 126 L789 281 M811 132 L811 286"
+                />
+                <path
+                  class="sketch-line-soft"
+                  d="M746 150 L836 172 M746 183 L836 205 M746 216 L836 238 M746 249 L836 271"
+                />
+                <path
+                  class="sketch-line"
+                  d="M746 116 L836 138 L872 108 M836 138 L836 294 L746 272 Z M836 294 L872 264 L872 108"
+                />
+
+                <text x="783" y="330" class="sketch-label">
+                  Q
+                </text>
+                <text x="720" y="354" class="sketch-small">
+                  FP64-refined orthogonal sheet
+                </text>
+
+                <!-- Refinement loop -->
+                <path
+                  class="sketch-line-soft"
+                  marker-end="url(#arrowHead)"
+                  d="M790 82 C705 44, 528 45, 470 82"
+                />
+                <text x="535" y="52" class="sketch-small">
+                  residual and orthogonality check
+                </text>
+
+                <!-- Small axis triad -->
+                <path class="sketch-line-soft" d="M80 386 L132 386" />
+                <path class="sketch-line-soft" d="M80 386 L80 334" />
+                <path class="sketch-line-soft" d="M80 386 L113 357" />
+                <text x="138" y="391" class="sketch-small">x</text>
+                <text x="70" y="329" class="sketch-small">z</text>
+                <text x="118" y="354" class="sketch-small">y</text>
+              </g>
+            </svg>
           </div>
         </section>
 
@@ -745,23 +1023,6 @@ Report:
           </div>
         </section>
 
-        <section id="acknowledgment">
-          <h2>Acknowledgment</h2>
-
-          <div class="acknowledgment">
-            <p>
-              The page uses a restrained Persian-Spanish manuscript tone:
-              Persian calligraphy for the algebraic root of the work, and a
-              muted azulejo-blue rule in appreciation of the Spanish authors
-              and collaborators.
-            </p>
-
-            <p class="spanish-thanks">
-              Con gratitud a los coautores españoles por su buen trabajo.
-            </p>
-          </div>
-        </section>
-
         <section id="status">
           <h2>Status</h2>
 
@@ -775,6 +1036,11 @@ Report:
             <div class="status">
               <strong>Method note</strong>
               Drafted.
+            </div>
+
+            <div class="status">
+              <strong>3D sketch</strong>
+              Included.
             </div>
 
             <div class="status">
