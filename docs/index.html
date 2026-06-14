@@ -1,55 +1,27 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>QR8 — INT8-Initialized Cholesky-QR</title>
-  <meta name="description" content="QR8: INT8-initialized Cholesky-QR with FP64 refinement for tall-and-skinny matrices.">
-  <meta name="theme-color" content="#07090d">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>QR8 — INT8-initialized Cholesky-QR with FP64 refinement</title>
+  <meta
+    name="description"
+    content="QR8: INT8-initialized Cholesky-QR with FP64 refinement."
+  />
 
   <style>
     :root {
-      --bg: #07090d;
-      --bg-soft: #0d1118;
-      --panel: rgba(15, 20, 29, 0.78);
-      --panel-solid: #101620;
-      --text: #e7edf2;
-      --muted: #95a3ad;
-      --faint: #596773;
-      --line: rgba(151, 178, 190, 0.16);
-      --cyan: #6fffe0;
-      --green: #9cffcb;
-      --blue: #8ab4ff;
-      --amber: #ffd48a;
-      --red: #ff7a90;
-      --shadow: 0 22px 80px rgba(0, 0, 0, 0.45);
-      --radius: 22px;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-
-    body.light {
-      --bg: #f7f8fb;
-      --bg-soft: #eef2f5;
-      --panel: rgba(255, 255, 255, 0.82);
-      --panel-solid: #ffffff;
-      --text: #151b22;
-      --muted: #51606b;
-      --faint: #7b8790;
-      --line: rgba(22, 30, 40, 0.13);
-      --cyan: #007c72;
-      --green: #008a5a;
-      --blue: #245cc7;
-      --amber: #9c6600;
-      --red: #bb2142;
-      --shadow: 0 22px 70px rgba(20, 30, 50, 0.13);
-    }
-
-    body.binade {
-      --cyan: #d8ff6f;
-      --green: #6ffff3;
-      --blue: #d8b4ff;
-      --amber: #ffe66f;
+      --paper: #f4ecd9;
+      --paper-soft: #fbf6ea;
+      --ink: #24180f;
+      --ink-soft: #5f4b38;
+      --rule: #c9b98f;
+      --rule-dark: #9b7a45;
+      --accent: #7a3b22;
+      --gold: #9b6b2f;
+      --shadow: rgba(36, 24, 15, 0.08);
+      --mono: "Courier New", Courier, monospace;
+      --serif: Georgia, "Times New Roman", Times, serif;
     }
 
     * {
@@ -62,1297 +34,649 @@
 
     body {
       margin: 0;
-      min-height: 100vh;
-      color: var(--text);
+      color: var(--ink);
       background:
-        radial-gradient(circle at 15% 15%, rgba(111, 255, 224, 0.10), transparent 32rem),
-        radial-gradient(circle at 85% 5%, rgba(138, 180, 255, 0.12), transparent 30rem),
-        radial-gradient(circle at 75% 90%, rgba(156, 255, 203, 0.08), transparent 34rem),
-        var(--bg);
-      font-family: var(--sans);
-      line-height: 1.55;
-      overflow-x: hidden;
+        radial-gradient(circle at top, rgba(255, 255, 255, 0.55), transparent 34rem),
+        linear-gradient(180deg, #f7f0df 0%, var(--paper) 45%, #efe3c7 100%);
+      font-family: var(--serif);
+      line-height: 1.65;
     }
 
     body::before {
       content: "";
       position: fixed;
       inset: 0;
-      z-index: -2;
       pointer-events: none;
+      opacity: 0.16;
       background-image:
-        linear-gradient(rgba(151, 178, 190, 0.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(151, 178, 190, 0.035) 1px, transparent 1px);
-      background-size: 38px 38px;
-      mask-image: radial-gradient(circle at center, black, transparent 78%);
-    }
-
-    #bitfield {
-      position: fixed;
-      inset: 0;
-      z-index: -3;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
+        linear-gradient(rgba(36, 24, 15, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(36, 24, 15, 0.025) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mix-blend-mode: multiply;
     }
 
     a {
-      color: inherit;
-      text-decoration: none;
+      color: var(--accent);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 0.18em;
     }
 
-    .topbar {
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      padding: 0.9rem min(5vw, 4rem);
-      border-bottom: 1px solid var(--line);
-      background: rgba(7, 9, 13, 0.68);
-      backdrop-filter: blur(18px);
+    a:hover {
+      color: var(--ink);
     }
 
-    body.light .topbar {
-      background: rgba(247, 248, 251, 0.74);
+    .page {
+      width: min(980px, calc(100% - 32px));
+      margin: 28px auto;
+      padding: clamp(22px, 4vw, 56px);
+      background: rgba(251, 246, 234, 0.82);
+      border: 1px solid var(--rule);
+      box-shadow: 0 20px 60px var(--shadow);
+      position: relative;
     }
 
-    .brand {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.65rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-    }
-
-    .brand-glyph {
-      display: grid;
-      place-items: center;
-      width: 2.1rem;
-      height: 2.1rem;
-      border: 1px solid var(--line);
-      border-radius: 0.65rem;
-      color: var(--cyan);
-      background: linear-gradient(135deg, rgba(111, 255, 224, 0.12), rgba(138, 180, 255, 0.06));
-      font-family: var(--mono);
-      box-shadow: inset 0 0 18px rgba(111, 255, 224, 0.06);
-    }
-
-    .nav {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      color: var(--muted);
-      font-size: 0.92rem;
-    }
-
-    .nav a {
-      transition: color 180ms ease;
-    }
-
-    .nav a:hover {
-      color: var(--text);
-    }
-
-    .phase-button {
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      padding: 0.48rem 0.78rem;
-      color: var(--muted);
-      background: transparent;
-      font: inherit;
-      cursor: pointer;
-    }
-
-    .phase-button:hover {
-      color: var(--text);
-      border-color: rgba(111, 255, 224, 0.45);
-    }
-
-    main {
-      width: min(1180px, calc(100% - 2rem));
-      margin: 0 auto;
-    }
-
-    .hero {
-      display: grid;
-      grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr);
-      gap: 2rem;
-      align-items: center;
-      min-height: calc(100vh - 74px);
-      padding: 5rem 0 4rem;
-    }
-
-    .kicker {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-bottom: 1.25rem;
-      padding: 0.42rem 0.72rem;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      color: var(--cyan);
-      background: rgba(111, 255, 224, 0.055);
-      font-family: var(--mono);
-      font-size: 0.78rem;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-    }
-
-    .kicker::before {
+    .page::before {
       content: "";
-      width: 0.45rem;
-      height: 0.45rem;
-      border-radius: 999px;
-      background: var(--cyan);
-      box-shadow: 0 0 22px var(--cyan);
+      position: absolute;
+      inset: 10px;
+      border: 1px solid rgba(155, 122, 69, 0.42);
+      pointer-events: none;
+    }
+
+    .inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      text-align: center;
+      padding: 34px 0 42px;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .small-caps {
+      font-size: 0.78rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+
+    .persian-line {
+      margin-top: 12px;
+      font-size: 0.92rem;
+      color: var(--ink-soft);
+      letter-spacing: 0.08em;
     }
 
     h1 {
-      margin: 0;
-      font-size: clamp(4.5rem, 15vw, 10.5rem);
-      line-height: 0.85;
-      letter-spacing: -0.09em;
-    }
-
-    .hero h1 span {
-      color: var(--cyan);
-      text-shadow: 0 0 34px rgba(111, 255, 224, 0.28);
+      margin: 18px 0 10px;
+      font-size: clamp(5rem, 16vw, 10.5rem);
+      line-height: 0.86;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      color: var(--ink);
     }
 
     .subtitle {
-      max-width: 48rem;
-      margin: 1.4rem 0 0;
-      color: var(--muted);
-      font-size: clamp(1.05rem, 2vw, 1.28rem);
+      max-width: 680px;
+      margin: 0 auto;
+      font-size: clamp(1.15rem, 2.6vw, 1.7rem);
+      line-height: 1.35;
+      color: var(--ink);
     }
 
-    .subtitle strong {
-      color: var(--text);
-      font-weight: 650;
+    .note {
+      max-width: 620px;
+      margin: 18px auto 0;
+      color: var(--ink-soft);
+      font-size: 1rem;
     }
 
-    .hero-actions {
+    nav {
+      margin-top: 28px;
       display: flex;
-      flex-wrap: wrap;
-      gap: 0.8rem;
-      margin-top: 2rem;
-    }
-
-    .button {
-      display: inline-flex;
-      align-items: center;
       justify-content: center;
-      min-height: 2.75rem;
-      padding: 0.65rem 1rem;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      color: var(--text);
-      background: rgba(255, 255, 255, 0.035);
-      transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
-    }
-
-    .button.primary {
-      border-color: rgba(111, 255, 224, 0.55);
-      background: rgba(111, 255, 224, 0.10);
-    }
-
-    .button.disabled {
-      color: var(--faint);
-      cursor: not-allowed;
-    }
-
-    .button:not(.disabled):hover {
-      transform: translateY(-2px);
-      border-color: rgba(111, 255, 224, 0.65);
-      background: rgba(111, 255, 224, 0.08);
-    }
-
-    .status-line {
-      display: flex;
       flex-wrap: wrap;
-      gap: 0.7rem;
-      margin-top: 1.35rem;
-      color: var(--muted);
-      font-size: 0.92rem;
+      gap: 10px;
     }
 
-    .status-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.45rem;
-      padding: 0.42rem 0.68rem;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.025);
+    nav a {
+      display: inline-block;
+      padding: 8px 14px;
+      border: 1px solid var(--rule);
+      color: var(--ink);
+      background: rgba(244, 236, 217, 0.45);
+      text-decoration: none;
+      font-size: 0.94rem;
     }
 
-    .pulse {
-      width: 0.5rem;
-      height: 0.5rem;
-      border-radius: 999px;
-      background: var(--amber);
-      box-shadow: 0 0 18px var(--amber);
-      animation: pulse 1.8s ease-in-out infinite;
+    nav a:hover {
+      background: rgba(201, 185, 143, 0.22);
+      border-color: var(--rule-dark);
     }
 
-    @keyframes pulse {
-      0%, 100% { opacity: 0.45; transform: scale(0.9); }
-      50% { opacity: 1; transform: scale(1.12); }
+    main {
+      padding-top: 26px;
     }
 
-    .hero-panel {
-      position: relative;
-      padding: 1.1rem;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: var(--panel);
-      box-shadow: var(--shadow);
-      overflow: hidden;
+    section {
+      padding: 30px 0;
+      border-bottom: 1px solid rgba(201, 185, 143, 0.75);
     }
 
-    .hero-panel::before {
-      content: "";
-      position: absolute;
-      inset: -1px;
-      pointer-events: none;
-      background:
-        radial-gradient(circle at 25% 15%, rgba(111, 255, 224, 0.16), transparent 20rem),
-        linear-gradient(135deg, transparent, rgba(138, 180, 255, 0.08));
-      opacity: 0.8;
+    section:last-child {
+      border-bottom: 0;
+      padding-bottom: 10px;
     }
 
-    .chip {
-      position: relative;
+    h2 {
+      margin: 0 0 14px;
+      font-size: clamp(1.45rem, 3vw, 2rem);
+      font-weight: 500;
+      line-height: 1.25;
+    }
+
+    h3 {
+      margin: 22px 0 8px;
+      font-size: 1.12rem;
+      font-weight: 600;
+    }
+
+    p {
+      margin: 0 0 14px;
+    }
+
+    .lead {
+      font-size: 1.12rem;
+      color: var(--ink);
+    }
+
+    .two-column {
       display: grid;
-      gap: 1rem;
-      padding: 1.1rem;
-      border: 1px solid rgba(151, 178, 190, 0.16);
-      border-radius: 18px;
-      background:
-        linear-gradient(135deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.015)),
-        var(--panel-solid);
+      grid-template-columns: 1fr 1fr;
+      gap: 34px;
+      align-items: start;
     }
 
-    .chip-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      color: var(--muted);
-      font-family: var(--mono);
-      font-size: 0.82rem;
+    .box {
+      border: 1px solid var(--rule);
+      background: rgba(244, 236, 217, 0.42);
+      padding: 18px;
     }
 
-    .pivot-watch {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.45rem;
-      cursor: pointer;
-      user-select: none;
+    .box h3:first-child {
+      margin-top: 0;
     }
 
-    .pivot-light {
-      width: 0.72rem;
-      height: 0.72rem;
-      border-radius: 999px;
-      background: var(--green);
-      box-shadow: 0 0 18px var(--green);
-    }
-
-    .pivot-watch.warn .pivot-light {
-      background: var(--red);
-      box-shadow: 0 0 18px var(--red);
-    }
-
-    .matrix-shell {
-      position: relative;
-      display: grid;
-      place-items: center;
-      min-height: 280px;
-      border: 1px solid rgba(151, 178, 190, 0.14);
-      border-radius: 16px;
-      background:
-        linear-gradient(90deg, rgba(111, 255, 224, 0.04) 1px, transparent 1px),
-        linear-gradient(rgba(111, 255, 224, 0.04) 1px, transparent 1px);
-      background-size: 24px 24px;
-      overflow: hidden;
-    }
-
-    .matrix-shell::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(circle at center, transparent, rgba(0, 0, 0, 0.28));
-      pointer-events: none;
-    }
-
-    .matrix-grid {
-      position: relative;
-      z-index: 1;
-      display: grid;
-      grid-template-columns: repeat(5, 2.15rem);
-      gap: 0.45rem;
-      padding: 1.3rem 1.55rem;
-      color: var(--text);
+    .algorithm {
+      margin: 18px 0 0;
+      padding: 18px;
+      border-left: 3px solid var(--gold);
+      background: rgba(255, 252, 242, 0.48);
       font-family: var(--mono);
       font-size: 0.92rem;
-    }
-
-    .matrix-grid::before,
-    .matrix-grid::after {
-      content: "";
-      position: absolute;
-      top: 0.6rem;
-      bottom: 0.6rem;
-      width: 0.55rem;
-      border-top: 2px solid var(--cyan);
-      border-bottom: 2px solid var(--cyan);
-      opacity: 0.75;
-    }
-
-    .matrix-grid::before {
-      left: 0.3rem;
-      border-left: 2px solid var(--cyan);
-    }
-
-    .matrix-grid::after {
-      right: 0.3rem;
-      border-right: 2px solid var(--cyan);
-    }
-
-    .matrix-grid span {
-      display: grid;
-      place-items: center;
-      min-height: 2rem;
-      border-radius: 0.45rem;
-      color: var(--muted);
-      background: rgba(255, 255, 255, 0.025);
-    }
-
-    .matrix-grid .diag {
-      color: var(--cyan);
-      background: rgba(111, 255, 224, 0.08);
-    }
-
-    .matrix-grid .quiet {
-      color: rgba(149, 163, 173, 0.35);
-    }
-
-    .chip-caption {
-      color: var(--muted);
-      font-size: 0.9rem;
-    }
-
-    .chip-caption code {
-      color: var(--cyan);
-      font-family: var(--mono);
-    }
-
-    .section {
-      padding: 4.5rem 0;
-      border-top: 1px solid var(--line);
-    }
-
-    .section-header {
-      display: flex;
-      align-items: end;
-      justify-content: space-between;
-      gap: 1.5rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .section h2 {
-      margin: 0;
-      font-size: clamp(2rem, 5vw, 4rem);
-      line-height: 0.95;
-      letter-spacing: -0.06em;
-    }
-
-    .section-lead {
-      max-width: 38rem;
-      margin: 0;
-      color: var(--muted);
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 1rem;
-    }
-
-    .card {
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 1.25rem;
-      background: var(--panel);
-      box-shadow: 0 14px 48px rgba(0, 0, 0, 0.16);
-    }
-
-    .card h3 {
-      margin: 0 0 0.75rem;
-      font-size: 1.08rem;
-    }
-
-    .card p {
-      margin: 0;
-      color: var(--muted);
-    }
-
-    .card .tag {
-      display: inline-flex;
-      margin-bottom: 0.95rem;
-      padding: 0.24rem 0.5rem;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      color: var(--cyan);
-      font-family: var(--mono);
-      font-size: 0.73rem;
-    }
-
-    .equation-card {
-      margin: 1rem 0;
-      padding: 1.15rem;
-      border: 1px solid rgba(111, 255, 224, 0.22);
-      border-radius: var(--radius);
-      color: var(--text);
-      background: rgba(111, 255, 224, 0.045);
+      line-height: 1.55;
       overflow-x: auto;
+      white-space: pre;
     }
 
-    .equation-card mjx-container {
-      font-size: 108% !important;
+    .equation {
+      margin: 18px 0;
+      padding: 14px 18px;
+      text-align: center;
+      border-top: 1px solid rgba(201, 185, 143, 0.7);
+      border-bottom: 1px solid rgba(201, 185, 143, 0.7);
+      font-size: 1.08rem;
+      color: var(--ink);
+    }
+
+    .muted {
+      color: var(--ink-soft);
     }
 
     .toy {
-      display: grid;
-      grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-      gap: 1rem;
-      align-items: stretch;
+      margin-top: 18px;
+      border: 1px solid var(--rule);
+      background: rgba(255, 252, 242, 0.5);
+      padding: 18px;
     }
 
-    .control {
+    .slider-row {
       display: grid;
-      gap: 0.65rem;
-      margin-top: 1rem;
-    }
-
-    label {
-      color: var(--muted);
-      font-size: 0.92rem;
+      grid-template-columns: 160px 1fr 90px;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 16px;
     }
 
     input[type="range"] {
       width: 100%;
-      accent-color: var(--cyan);
+      accent-color: var(--accent);
     }
 
-    select {
-      width: 100%;
-      min-height: 2.65rem;
-      padding: 0.55rem 0.7rem;
-      border: 1px solid var(--line);
-      border-radius: 0.8rem;
-      color: var(--text);
-      background: var(--panel-solid);
-      font: inherit;
+    .toy-output {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 16px;
     }
 
-    .meter {
-      height: 0.85rem;
+    .measure {
+      padding: 14px;
+      border: 1px solid rgba(201, 185, 143, 0.88);
+      background: rgba(244, 236, 217, 0.55);
+    }
+
+    .measure .label {
+      display: block;
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+
+    .measure .value {
+      display: block;
+      margin-top: 6px;
+      font-size: 1.35rem;
+      color: var(--ink);
+    }
+
+    .bar {
+      margin-top: 16px;
+      height: 12px;
+      border: 1px solid var(--rule);
+      background: rgba(201, 185, 143, 0.25);
       overflow: hidden;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.04);
     }
 
-    .meter-fill {
-      width: 30%;
+    .bar-fill {
       height: 100%;
-      border-radius: inherit;
-      background: var(--green);
-      box-shadow: 0 0 22px currentColor;
-      transition: width 220ms ease, background 220ms ease;
+      width: 25%;
+      background: linear-gradient(90deg, var(--gold), var(--accent));
+      transition: width 180ms ease;
     }
 
-    .toy-readout {
-      min-height: 3.5rem;
-      color: var(--muted);
+    .list {
+      margin: 12px 0 0;
+      padding-left: 20px;
     }
 
-    #gramCanvas {
-      width: 100%;
-      height: 320px;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: rgba(255, 255, 255, 0.025);
+    .list li {
+      margin-bottom: 6px;
     }
 
-    .repo-box {
+    .status-list {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(260px, 0.48fr);
-      gap: 1rem;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 18px;
     }
 
-    pre {
-      margin: 0;
-      padding: 1.1rem;
-      overflow-x: auto;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      color: var(--muted);
-      background: rgba(0, 0, 0, 0.22);
-      font-family: var(--mono);
-      font-size: 0.88rem;
-      line-height: 1.55;
+    .status {
+      border: 1px solid var(--rule);
+      padding: 14px;
+      background: rgba(244, 236, 217, 0.45);
     }
 
-    body.light pre {
-      background: rgba(0, 0, 0, 0.04);
-    }
-
-    .todo-list {
-      display: grid;
-      gap: 0.65rem;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-    }
-
-    .todo-list li {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      color: var(--muted);
-    }
-
-    .todo-list li::before {
-      content: "";
-      width: 0.5rem;
-      height: 0.5rem;
-      border-radius: 999px;
-      background: var(--cyan);
-      box-shadow: 0 0 14px var(--cyan);
-      flex: none;
+    .status strong {
+      display: block;
+      margin-bottom: 4px;
+      font-weight: 600;
     }
 
     footer {
-      width: min(1180px, calc(100% - 2rem));
-      margin: 0 auto;
-      padding: 2.5rem 0 3.5rem;
-      border-top: 1px solid var(--line);
-      color: var(--faint);
+      margin-top: 28px;
+      padding-top: 20px;
+      border-top: 1px solid var(--rule);
+      color: var(--ink-soft);
       font-size: 0.92rem;
-    }
-
-    .footer-row {
       display: flex;
       justify-content: space-between;
-      gap: 1rem;
+      gap: 16px;
       flex-wrap: wrap;
     }
 
-    .secret {
-      position: fixed;
-      right: 1rem;
-      bottom: 1rem;
-      z-index: 40;
-      width: min(420px, calc(100% - 2rem));
-      padding: 1rem;
-      border: 1px solid rgba(111, 255, 224, 0.45);
-      border-radius: 18px;
-      color: var(--text);
-      background: rgba(9, 13, 18, 0.92);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(18px);
-      opacity: 0;
-      pointer-events: none;
-      transform: translateY(14px);
-      transition: opacity 180ms ease, transform 180ms ease;
+    .ornament {
+      width: 92px;
+      height: 18px;
+      margin: 0 auto 16px;
+      position: relative;
     }
 
-    body.light .secret {
-      background: rgba(255, 255, 255, 0.94);
+    .ornament::before,
+    .ornament::after {
+      content: "";
+      position: absolute;
+      top: 8px;
+      width: 34px;
+      height: 1px;
+      background: var(--rule-dark);
     }
 
-    .secret.show {
-      opacity: 1;
-      pointer-events: auto;
-      transform: translateY(0);
+    .ornament::before {
+      left: 0;
     }
 
-    .secret h3 {
-      margin: 0 0 0.5rem;
-      color: var(--cyan);
-      font-family: var(--mono);
+    .ornament::after {
+      right: 0;
     }
 
-    .secret p {
-      margin: 0.45rem 0;
-      color: var(--muted);
+    .ornament span {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 10px;
+      height: 10px;
+      border: 1px solid var(--rule-dark);
+      transform: translate(-50%, -50%) rotate(45deg);
+      background: rgba(244, 236, 217, 0.9);
     }
 
-    .secret button {
-      float: right;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      color: var(--muted);
-      background: transparent;
-      cursor: pointer;
-    }
+    @media (max-width: 760px) {
+      .page {
+        width: min(100% - 18px, 980px);
+        margin: 9px auto;
+        padding: 24px 18px;
+      }
 
-    .kbd {
-      padding: 0.08rem 0.35rem;
-      border: 1px solid var(--line);
-      border-radius: 0.35rem;
-      color: var(--text);
-      background: rgba(255, 255, 255, 0.04);
-      font-family: var(--mono);
-      font-size: 0.85em;
-    }
+      .page::before {
+        inset: 7px;
+      }
 
-    .spoiler-dot {
-      display: inline-block;
-      width: 0.58rem;
-      height: 0.58rem;
-      margin-left: 0.25rem;
-      border-radius: 999px;
-      background: var(--cyan);
-      opacity: 0.25;
-      vertical-align: middle;
-    }
+      header {
+        padding-top: 26px;
+      }
 
-    .spoiler-dot:hover {
-      opacity: 1;
-      box-shadow: 0 0 18px var(--cyan);
-    }
-
-    @media (max-width: 900px) {
-      .hero,
-      .toy,
-      .repo-box {
+      .two-column,
+      .toy-output,
+      .status-list {
         grid-template-columns: 1fr;
       }
 
-      .hero {
-        min-height: auto;
-        padding-top: 3.8rem;
-      }
-
-      .grid {
+      .slider-row {
         grid-template-columns: 1fr;
+        gap: 8px;
       }
 
-      .section-header {
-        align-items: start;
-        flex-direction: column;
+      nav {
+        align-items: stretch;
       }
 
-      .nav {
-        display: none;
+      nav a {
+        width: 100%;
       }
-    }
 
-    @media (prefers-reduced-motion: reduce) {
-      *,
-      *::before,
-      *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        scroll-behavior: auto !important;
+      footer {
+        display: block;
       }
     }
   </style>
-
-  <script>
-    window.MathJax = {
-      tex: {
-        inlineMath: [['\\(', '\\)']],
-        displayMath: [['\\[', '\\]']],
-        macros: {
-          cond: ['\\kappa\\!\\left(#1\\right)', 1],
-          norm: ['\\left\\lVert #1 \\right\\rVert', 1]
-        }
-      },
-      svg: {
-        fontCache: 'global'
-      }
-    };
-  </script>
-  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 
 <body>
-  <canvas id="bitfield" aria-hidden="true"></canvas>
+  <div class="page">
+    <div class="inner">
+      <header>
+        <div class="ornament" aria-hidden="true"><span></span></div>
 
-  <header class="topbar">
-    <a class="brand" href="#top" aria-label="QR8 home">
-      <span class="brand-glyph">Q</span>
-      <span>QR8</span>
-    </a>
+        <div class="small-caps">A numerical manuscript</div>
 
-    <nav class="nav" aria-label="main navigation">
-      <a href="#method">method</a>
-      <a href="#architecture">architecture</a>
-      <a href="#toy">toy</a>
-      <a href="#repo">repo</a>
-    </nav>
-
-    <button id="themeToggle" class="phase-button" type="button">phase flip</button>
-  </header>
-
-  <main id="top">
-    <section class="hero">
-      <div class="hero-copy">
-        <div class="kicker">INT8 · FP64 · Tensor Cores · Cholesky-QR</div>
-
-        <h1>QR<span>8</span></h1>
+        <h1>QR8</h1>
 
         <p class="subtitle">
-          <strong>QR8</strong> studies INT8-initialized Cholesky-QR for tall-and-skinny matrices:
-          a low-cost Gram start, followed by FP64 correction when accuracy matters.
+          INT8-initialized Cholesky-QR with FP64 refinement.
         </p>
 
-        <div class="hero-actions">
-          <a class="button primary" href="#method">read the method</a>
-          <a class="button" href="#toy">play with conditioning</a>
-          <a class="button disabled" href="#" aria-disabled="true">CUDA code soon</a>
+        <p class="note">
+          A small method in the long shadow of algebra: low-precision structure,
+          high-precision correction, and a quiet concern for orthogonality.
+        </p>
+
+        <div class="persian-line" lang="fa" dir="rtl">
+          جبر · عدد · پایداری
         </div>
 
-        <div class="status-line" aria-label="project status">
-          <span class="status-pill"><span class="pulse"></span> site skeleton ready</span>
-          <span class="status-pill">source upload: tomorrow</span>
-          <span class="status-pill">static GitHub Pages</span>
-        </div>
-      </div>
+        <nav aria-label="Main navigation">
+          <a href="#abstract">abstract</a>
+          <a href="#method">method</a>
+          <a href="#toy">conditioning note</a>
+          <a href="#status">status</a>
+          <a href="LICENSE.txt">Beerware license</a>
+        </nav>
+      </header>
 
-      <aside class="hero-panel" aria-label="linear algebra and architecture panel">
-        <div class="chip">
-          <div class="chip-top">
-            <span>gram-core / revision 0</span>
-            <span id="pivotWatch" class="pivot-watch" title="pivot watchdog">
-              <span class="pivot-light"></span>
-              <span id="pivotText">pivot ok</span>
-            </span>
+      <main>
+        <section id="abstract">
+          <h2>Abstract</h2>
+
+          <p class="lead">
+            QR8 studies a compact mixed-precision route to QR factorization:
+            an INT8-oriented initialization is used to expose a cheap triangular
+            structure, while FP64 refinement restores numerical reliability.
+          </p>
+
+          <p>
+            The aim is not to replace stable dense QR methods in all regimes.
+            The aim is narrower: to examine when a low-precision starting point
+            can be made useful by a carefully placed high-precision correction.
+          </p>
+
+          <div class="equation">
+            A \(\approx\) Q R, with orthogonality repaired by refinement.
           </div>
+        </section>
 
-          <div class="matrix-shell">
-            <div class="matrix-grid" aria-label="small hidden matrix sketch">
-              <span class="diag">1</span><span>0</span><span class="quiet">·</span><span>0</span><span>8</span>
-              <span>0</span><span class="diag">2</span><span>0</span><span class="quiet">·</span><span>0</span>
-              <span class="quiet">·</span><span>0</span><span class="diag">5</span><span>0</span><span class="quiet">·</span>
-              <span>0</span><span class="quiet">·</span><span>0</span><span class="diag">4</span><span>0</span>
-              <span>8</span><span>0</span><span class="quiet">·</span><span>0</span><span class="diag">1</span>
+        <section id="method">
+          <h2>Method</h2>
+
+          <div class="two-column">
+            <div>
+              <p>
+                QR8 follows the Cholesky-QR idea: form a Gram matrix, factor it,
+                and obtain the orthogonal factor through a triangular solve.
+                The distinctive point is the use of a low-precision initializer
+                before refinement.
+              </p>
+
+              <p>
+                In practical terms, QR8 treats the low-precision stage as a
+                scaffold. The final judgment is made in higher precision, where
+                loss of orthogonality and residual error can be measured.
+              </p>
+            </div>
+
+            <div class="box">
+              <h3>Principle</h3>
+              <p>
+                Use cheap arithmetic to approach the structure; use careful
+                arithmetic to correct it.
+              </p>
+
+              <h3>Target</h3>
+              <p>
+                A small, inspectable experiment for mixed-precision QR and
+                conditioning-sensitive refinement.
+              </p>
             </div>
           </div>
 
-          <p class="chip-caption">
-            A quiet Gram sketch: <code>INT8</code> starts the path, <code>FP64</code> closes it.
-            Some constants are intentionally not explained on the page.
-          </p>
-        </div>
-      </aside>
-    </section>
+          <pre class="algorithm">Given a matrix A
 
-    <section id="method" class="section">
-      <div class="section-header">
-        <h2>Method</h2>
-        <p class="section-lead">
-          The page keeps the story compact: low precision for the initializer, high precision for the final numerical contract.
-        </p>
-      </div>
+1. Build a low-precision representation of A.
+2. Form an approximate Gram structure.
+3. Compute a triangular Cholesky factor R.
+4. Solve for a provisional Q.
+5. Recheck residual and orthogonality in FP64.
+6. Refine when the conditioning permits it.
 
-      <div class="equation-card">
-        \[
-        A \xrightarrow{\mathrm{scale+quantize}} A_8,\qquad
-        G_8 = A_8^{T}A_8,\qquad
-        R_0 = \operatorname{chol}(G_8 + \varepsilon I),\qquad
-        Q_0 = A R_0^{-1}.
-        \]
-      </div>
+Report:
+  ||A - Q R||
+  ||I - Q^T Q||
+  condition estimate
+  precision path</pre>
+        </section>
 
-      <div class="grid">
-        <article class="card">
-          <span class="tag">01 / initializer</span>
-          <h3>INT8 Gram start</h3>
+        <section id="toy">
+          <h2>Conditioning note</h2>
+
           <p>
-            Use INT8/INT32 throughput to build a cheap approximation of the Gram matrix before refinement.
+            Cholesky-QR is sensitive to conditioning because the Gram matrix
+            squares the condition number. The small control below is only a
+            visual note: it shows why refinement becomes more important as the
+            matrix becomes harder.
           </p>
-        </article>
 
-        <article class="card">
-          <span class="tag">02 / correction</span>
-          <h3>FP64 polishing</h3>
-          <p>
-            Correct the basis with high-precision residual information instead of pretending INT8 is enough.
-          </p>
-        </article>
-
-        <article class="card">
-          <span class="tag">03 / safeguard</span>
-          <h3>Shifted variants</h3>
-          <p>
-            When the pivot path becomes fragile, shifted Cholesky variants keep the factorization alive.
-          </p>
-        </article>
-      </div>
-
-      <div class="equation-card">
-        \[
-        \norm{Q^{T}Q-I}_F
-        \quad\text{is the visible contract;}\quad
-        \cond{A}^{2}
-        \quad\text{is the hidden tax.}
-        \]
-      </div>
-    </section>
-
-    <section id="architecture" class="section">
-      <div class="section-header">
-        <h2>Architecture</h2>
-        <p class="section-lead">
-          The design language borrows from chip floorplans: lanes, pivots, memory pressure, and precision paths.
-        </p>
-      </div>
-
-      <div class="grid">
-        <article class="card">
-          <span class="tag">V100S path</span>
-          <h3>Volta-era baseline</h3>
-          <p>
-            A useful stress point for comparing classical FP64 routines against Tensor-Core-style initialization.
-          </p>
-        </article>
-
-        <article class="card">
-          <span class="tag">RTX A6000 path</span>
-          <h3>Ampere workstation path</h3>
-          <p>
-            A practical architecture where FP64 correction can dominate the total runtime.
-          </p>
-        </article>
-
-        <article class="card">
-          <span class="tag">H200 path</span>
-          <h3>Hopper path</h3>
-          <p>
-            A high-throughput target where the balance between initialization and correction becomes more interesting.
-          </p>
-        </article>
-      </div>
-    </section>
-
-    <section id="toy" class="section">
-      <div class="section-header">
-        <h2>Conditioning toy</h2>
-        <p class="section-lead">
-          This is intentionally conceptual. It is not a reported measurement and should not be cited as data.
-        </p>
-      </div>
-
-      <div class="toy">
-        <div class="card">
-          <span class="tag">interactive sketch</span>
-          <h3>
-            Stability pressure near <span id="kappaSymbol" title="click carefully">\( \cond{A} \)</span>
-            <span class="spoiler-dot" title="not every dot is decorative"></span>
-          </h3>
-
-          <div class="control">
-            <label for="kappaRange">Choose \( \log_{10}\cond{A} \): <strong id="kappaValue">6.0</strong></label>
-            <input id="kappaRange" type="range" min="0" max="12" step="0.1" value="6">
-
-            <label for="methodSelect">Variant</label>
-            <select id="methodSelect">
-              <option value="int8">INT8 initializer + FP64 polish</option>
-              <option value="shifted">shifted adaptive variant</option>
-              <option value="cholqr2">unshifted FP64-CholQR2</option>
-            </select>
-
-            <div class="meter" aria-label="conceptual pressure meter">
-              <div id="meterFill" class="meter-fill"></div>
+          <div class="toy">
+            <div class="slider-row">
+              <label for="kappaSlider">condition level</label>
+              <input
+                id="kappaSlider"
+                type="range"
+                min="1"
+                max="12"
+                step="1"
+                value="4"
+              />
+              <strong id="kappaLabel">10⁴</strong>
             </div>
 
-            <div id="toyReadout" class="toy-readout" aria-live="polite"></div>
+            <div class="bar" aria-hidden="true">
+              <div class="bar-fill" id="barFill"></div>
+            </div>
+
+            <div class="toy-output">
+              <div class="measure">
+                <span class="label">matrix scale</span>
+                <span class="value" id="scaleValue">moderate</span>
+              </div>
+
+              <div class="measure">
+                <span class="label">Gram effect</span>
+                <span class="value" id="gramValue">10⁸</span>
+              </div>
+
+              <div class="measure">
+                <span class="label">refinement need</span>
+                <span class="value" id="refineValue">visible</span>
+              </div>
+            </div>
+
+            <p class="muted" style="margin-top: 16px;">
+              This is not a benchmark. It is a reminder: if \( \kappa(A) \)
+              grows, then \( \kappa(A^T A) \) grows roughly as
+              \( \kappa(A)^2 \).
+            </p>
           </div>
-        </div>
+        </section>
 
-        <canvas id="gramCanvas" aria-label="conceptual Gram matrix visualization"></canvas>
-      </div>
-    </section>
+        <section id="status">
+          <h2>Status</h2>
 
-    <section id="repo" class="section">
-      <div class="section-header">
-        <h2>Repository</h2>
-        <p class="section-lead">
-          Today: page shell. Tomorrow: CUDA source, Makefile, logs, and reproducibility notes.
-        </p>
-      </div>
+          <p>
+            QR8 is currently presented as a concise research page and prototype
+            description. The repository can later host the CPU and CUDA versions,
+            benchmark scripts, and reproducibility notes.
+          </p>
 
-      <div class="repo-box">
-        <pre><code>qr8/
-├─ index.html                  GitHub Pages site
-├─ README.md                   short project entry point
-├─ paper/                      manuscript and figures
-├─ src/                        CUDA code tomorrow
-│  ├─ qr8_unified.cu
-│  └─ kernels/
-├─ scripts/                    plotting and CSV checks
-├─ data/                       generated CSV logs
-└─ docs/                       optional Pages location</code></pre>
+          <div class="status-list">
+            <div class="status">
+              <strong>Method note</strong>
+              Drafted.
+            </div>
 
-        <div class="card">
-          <span class="tag">next upload</span>
-          <h3>Tomorrow checklist</h3>
-          <ul class="todo-list">
-            <li>add CUDA source</li>
-            <li>add Makefile targets</li>
-            <li>add CSV schema notes</li>
-            <li>link paper PDF</li>
-            <li>link result figures</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-  </main>
+            <div class="status">
+              <strong>Interactive page</strong>
+              Available.
+            </div>
 
-  <footer>
-    <div class="footer-row">
-      <span>QR8 — INT8-initialized Cholesky-QR with FP64 refinement.</span>
-      <span>Hidden mode exists, but the pivots decide when.</span>
+            <div class="status">
+              <strong>CUDA code</strong>
+              Coming soon.
+            </div>
+          </div>
+        </section>
+
+        <section id="license">
+          <h2>License</h2>
+
+          <p>
+            QR8 is released under the QR8 Beerware License, Revision 42.
+            You may use, copy, modify, distribute, sublicense, and sell the
+            project as long as the license notice is retained.
+          </p>
+
+          <p>
+            If we meet someday and QR8 was useful to you, a beer, coffee, tea,
+            or equivalent symbolic drink is appreciated but not required.
+          </p>
+
+          <p>
+            Read the full text here:
+            <a href="LICENSE.txt">LICENSE.txt</a>.
+          </p>
+        </section>
+      </main>
+
+      <footer>
+        <span>QR8 — INT8-initialized Cholesky-QR with FP64 refinement.</span>
+        <span>Licensed under QR8 Beerware, Revision 42.</span>
+      </footer>
     </div>
-  </footer>
-
-  <aside id="secretPanel" class="secret" aria-live="polite">
-    <button id="secretClose" type="button" aria-label="close secret panel">×</button>
-    <h3>hidden mode: binade corridor</h3>
-    <p id="secretReason">sequence accepted.</p>
-    <p>
-      The diagonal says less than it knows. The condition number collects interest.
-      The pivot is the gatekeeper.
-    </p>
-    <p>
-      Try <span class="kbd">b</span> for a phase tint, then return to the matrix.
-    </p>
-  </aside>
-
-  <!--
-    QR8 easter eggs:
-    1. Type q r 8.
-    2. Click the kappa symbol three times.
-    3. Click the pivot watchdog.
-    4. Press b for binade tint.
-    5. The tiny matrix hides 2, 5, 4 and 8.
-  -->
+  </div>
 
   <script>
-    (function () {
-      var canvas = document.getElementById('bitfield');
-      var ctx = canvas.getContext('2d');
-      var width = 0;
-      var height = 0;
-      var ratio = 1;
-      var packets = [];
-      var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const slider = document.getElementById("kappaSlider");
+    const kappaLabel = document.getElementById("kappaLabel");
+    const gramValue = document.getElementById("gramValue");
+    const scaleValue = document.getElementById("scaleValue");
+    const refineValue = document.getElementById("refineValue");
+    const barFill = document.getElementById("barFill");
 
-      function resizeBackground() {
-        ratio = window.devicePixelRatio || 1;
-        width = window.innerWidth;
-        height = window.innerHeight;
-        canvas.width = Math.floor(width * ratio);
-        canvas.height = Math.floor(height * ratio);
-        canvas.style.width = width + 'px';
-        canvas.style.height = height + 'px';
-        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    function updateToy() {
+      const p = Number(slider.value);
+      kappaLabel.textContent = "10" + superscript(p);
+      gramValue.textContent = "10" + superscript(2 * p);
+      barFill.style.width = Math.max(8, (p / 12) * 100) + "%";
 
-        packets = [];
-        var count = Math.max(24, Math.floor(width * height / 32000));
-        for (var i = 0; i < count; i += 1) {
-          packets.push({
-            x: Math.random() * width,
-            y: Math.random() * height,
-            vx: 0.16 + Math.random() * 0.55,
-            vy: Math.random() * 0.08 - 0.04,
-            bit: Math.random() > 0.5 ? '1' : '0',
-            alpha: 0.12 + Math.random() * 0.24
-          });
-        }
+      if (p <= 3) {
+        scaleValue.textContent = "mild";
+        refineValue.textContent = "small";
+      } else if (p <= 6) {
+        scaleValue.textContent = "moderate";
+        refineValue.textContent = "visible";
+      } else if (p <= 9) {
+        scaleValue.textContent = "large";
+        refineValue.textContent = "strong";
+      } else {
+        scaleValue.textContent = "severe";
+        refineValue.textContent = "critical";
       }
+    }
 
-      function drawBackground() {
-        ctx.clearRect(0, 0, width, height);
+    function superscript(n) {
+      const map = {
+        "0": "⁰",
+        "1": "¹",
+        "2": "²",
+        "3": "³",
+        "4": "⁴",
+        "5": "⁵",
+        "6": "⁶",
+        "7": "⁷",
+        "8": "⁸",
+        "9": "⁹",
+        "-": "⁻"
+      };
 
-        ctx.strokeStyle = 'rgba(111, 255, 224, 0.045)';
-        ctx.lineWidth = 1;
+      return String(n)
+        .split("")
+        .map((ch) => map[ch] || ch)
+        .join("");
+    }
 
-        for (var x = 0; x < width; x += 48) {
-          ctx.beginPath();
-          ctx.moveTo(x, 0);
-          ctx.lineTo(x, height);
-          ctx.stroke();
-        }
-
-        for (var y = 0; y < height; y += 48) {
-          ctx.beginPath();
-          ctx.moveTo(0, y);
-          ctx.lineTo(width, y);
-          ctx.stroke();
-        }
-
-        ctx.font = '12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
-        for (var i = 0; i < packets.length; i += 1) {
-          var p = packets[i];
-          ctx.fillStyle = 'rgba(111, 255, 224, ' + p.alpha + ')';
-          ctx.fillText(p.bit, p.x, p.y);
-          ctx.fillRect(p.x - 10, p.y + 5, 22, 1);
-
-          if (!reducedMotion) {
-            p.x += p.vx;
-            p.y += p.vy;
-            if (p.x > width + 20) {
-              p.x = -20;
-              p.y = Math.random() * height;
-            }
-          }
-        }
-
-        if (!reducedMotion) {
-          requestAnimationFrame(drawBackground);
-        }
-      }
-
-      resizeBackground();
-      drawBackground();
-      window.addEventListener('resize', function () {
-        resizeBackground();
-        fitToyCanvas();
-        updateToy();
-      });
-
-      var themeToggle = document.getElementById('themeToggle');
-      themeToggle.addEventListener('click', function () {
-        document.body.classList.toggle('light');
-      });
-
-      var secretPanel = document.getElementById('secretPanel');
-      var secretReason = document.getElementById('secretReason');
-      var secretClose = document.getElementById('secretClose');
-
-      function revealSecret(reason) {
-        secretReason.textContent = reason;
-        secretPanel.classList.add('show');
-      }
-
-      secretClose.addEventListener('click', function () {
-        secretPanel.classList.remove('show');
-      });
-
-      var keyTrail = '';
-      window.addEventListener('keydown', function (event) {
-        var key = event.key.length === 1 ? event.key.toLowerCase() : '';
-        if (!key) {
-          return;
-        }
-
-        keyTrail = (keyTrail + key).slice(-10);
-
-        if (keyTrail.indexOf('qr8') !== -1) {
-          revealSecret('sequence q r 8 accepted: QR is not dead; it only changes precision.');
-        }
-
-        if (key === 'b') {
-          document.body.classList.toggle('binade');
-        }
-      });
-
-      var pivotWatch = document.getElementById('pivotWatch');
-      var pivotText = document.getElementById('pivotText');
-
-      pivotWatch.addEventListener('click', function () {
-        pivotWatch.classList.toggle('warn');
-
-        if (pivotWatch.classList.contains('warn')) {
-          pivotText.textContent = 'pivot rejected';
-          revealSecret('pivot watchdog tripped: the shift was not decorative.');
-        } else {
-          pivotText.textContent = 'pivot ok';
-        }
-      });
-
-      var kappaSymbol = document.getElementById('kappaSymbol');
-      var kappaClicks = 0;
-      var kappaTimer = null;
-
-      kappaSymbol.addEventListener('click', function () {
-        kappaClicks += 1;
-        window.clearTimeout(kappaTimer);
-        kappaTimer = window.setTimeout(function () {
-          kappaClicks = 0;
-        }, 900);
-
-        if (kappaClicks >= 3) {
-          kappaClicks = 0;
-          revealSecret('three kappa clicks: amplification is quadratic, patience is not.');
-        }
-      });
-
-      var kappaRange = document.getElementById('kappaRange');
-      var kappaValue = document.getElementById('kappaValue');
-      var methodSelect = document.getElementById('methodSelect');
-      var meterFill = document.getElementById('meterFill');
-      var toyReadout = document.getElementById('toyReadout');
-      var gramCanvas = document.getElementById('gramCanvas');
-      var gramCtx = gramCanvas.getContext('2d');
-      var gramRatio = 1;
-      var gramWidth = 0;
-      var gramHeight = 0;
-
-      function fitToyCanvas() {
-        gramRatio = window.devicePixelRatio || 1;
-        var rect = gramCanvas.getBoundingClientRect();
-        gramWidth = Math.max(320, rect.width);
-        gramHeight = Math.max(260, rect.height);
-        gramCanvas.width = Math.floor(gramWidth * gramRatio);
-        gramCanvas.height = Math.floor(gramHeight * gramRatio);
-        gramCtx.setTransform(gramRatio, 0, 0, gramRatio, 0, 0);
-      }
-
-      function methodPressure(method, logk) {
-        var base = Math.pow(logk / 12, 1.75);
-
-        if (method === 'shifted') {
-          return Math.min(1, base * 0.36);
-        }
-
-        if (method === 'cholqr2') {
-          var pivotPenalty = logk > 8 ? 0.34 : 0.08;
-          return Math.min(1, base * 0.74 + pivotPenalty);
-        }
-
-        return Math.min(1, base * 0.52);
-      }
-
-      function pressureLabel(pressure) {
-        if (pressure < 0.28) {
-          return 'low';
-        }
-        if (pressure < 0.58) {
-          return 'moderate';
-        }
-        if (pressure < 0.82) {
-          return 'high';
-        }
-        return 'pivot-sensitive';
-      }
-
-      function pressureColor(pressure) {
-        if (pressure < 0.28) {
-          return getComputedStyle(document.body).getPropertyValue('--green');
-        }
-        if (pressure < 0.58) {
-          return getComputedStyle(document.body).getPropertyValue('--cyan');
-        }
-        if (pressure < 0.82) {
-          return getComputedStyle(document.body).getPropertyValue('--amber');
-        }
-        return getComputedStyle(document.body).getPropertyValue('--red');
-      }
-
-      function drawGram(pressure, method) {
-        gramCtx.clearRect(0, 0, gramWidth, gramHeight);
-
-        gramCtx.fillStyle = 'rgba(255, 255, 255, 0.018)';
-        gramCtx.fillRect(0, 0, gramWidth, gramHeight);
-
-        var n = 11;
-        var margin = 26;
-        var available = Math.min(gramWidth * 0.58, gramHeight - 2 * margin);
-        var cell = available / n;
-        var startX = margin;
-        var startY = (gramHeight - available) / 2;
-
-        gramCtx.font = '12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
-        gramCtx.fillStyle = 'rgba(149, 163, 173, 0.78)';
-        gramCtx.fillText('conceptual Gram pressure', startX, startY - 12);
-
-        for (var i = 0; i < n; i += 1) {
-          for (var j = 0; j < n; j += 1) {
-            var diag = i === j;
-            var ripple = Math.abs(Math.sin((i + 1) * 1.7 + (j + 3) * 0.9 + pressure * 5.4));
-            var intensity = diag ? 0.82 : Math.min(0.85, ripple * pressure);
-
-            if (diag) {
-              gramCtx.fillStyle = 'rgba(111, 255, 224, ' + (0.18 + intensity * 0.42) + ')';
-            } else if (method === 'cholqr2' && pressure > 0.75) {
-              gramCtx.fillStyle = 'rgba(255, 122, 144, ' + (0.08 + intensity * 0.55) + ')';
-            } else {
-              gramCtx.fillStyle = 'rgba(138, 180, 255, ' + (0.05 + intensity * 0.34) + ')';
-            }
-
-            gramCtx.fillRect(startX + j * cell + 1, startY + i * cell + 1, cell - 2, cell - 2);
-          }
-        }
-
-        var laneX = startX + available + 46;
-        var laneY = startY + 16;
-        var laneW = Math.max(100, gramWidth - laneX - margin);
-        var lanes = [
-          ['INT8', 0.86],
-          ['INT32', 0.66],
-          ['FP64', method === 'shifted' ? 0.78 : 0.58],
-          ['pivot', Math.max(0.14, pressure)]
-        ];
-
-        gramCtx.fillStyle = 'rgba(149, 163, 173, 0.78)';
-        gramCtx.fillText('precision lanes', laneX, startY - 12);
-
-        for (var l = 0; l < lanes.length; l += 1) {
-          var y = laneY + l * 48;
-          gramCtx.fillStyle = 'rgba(255, 255, 255, 0.055)';
-          gramCtx.fillRect(laneX, y, laneW, 12);
-
-          if (lanes[l][0] === 'pivot' && pressure > 0.74) {
-            gramCtx.fillStyle = 'rgba(255, 122, 144, 0.72)';
-          } else {
-            gramCtx.fillStyle = 'rgba(111, 255, 224, 0.62)';
-          }
-
-          gramCtx.fillRect(laneX, y, laneW * lanes[l][1], 12);
-          gramCtx.fillStyle = 'rgba(149, 163, 173, 0.9)';
-          gramCtx.fillText(lanes[l][0], laneX, y + 28);
-        }
-      }
-
-      function updateToy() {
-        var logk = Number(kappaRange.value);
-        var method = methodSelect.value;
-        var pressure = methodPressure(method, logk);
-        var label = pressureLabel(pressure);
-        var color = pressureColor(pressure);
-
-        kappaValue.textContent = logk.toFixed(1);
-        meterFill.style.width = Math.round(pressure * 100) + '%';
-        meterFill.style.background = color;
-
-        toyReadout.textContent =
-          'Conceptual pressure is ' + label +
-          '. This panel is only a visual guide; reported results belong in the paper and CSV logs.';
-
-        drawGram(pressure, method);
-      }
-
-      kappaRange.addEventListener('input', updateToy);
-      methodSelect.addEventListener('change', updateToy);
-
-      fitToyCanvas();
-      updateToy();
-
-      window.setTimeout(function () {
-        console.log('QR8 hidden prompt: type q r 8, click kappa, or question the pivot.');
-      }, 600);
-    }());
+    slider.addEventListener("input", updateToy);
+    updateToy();
   </script>
 </body>
 </html>
