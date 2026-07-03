@@ -238,6 +238,26 @@ h1::after {
       font-size: 1.02rem;
     }
 
+    .publication-note {
+      max-width: 660px;
+      margin: 18px auto 0;
+      padding: 14px 16px;
+      border-left: 3px solid var(--azulejo);
+      background: rgba(49, 93, 114, 0.06);
+      font-size: 0.98rem;
+      color: var(--ink);
+    }
+
+    .publication-note .label {
+      display: block;
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--azulejo);
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+
     .culture-band {
       width: min(680px, 100%);
       margin: 26px auto 0;
@@ -680,7 +700,10 @@ h1::after {
           high-precision correction, and a quiet concern for orthogonality.
         </p>
 
-
+        <div class="publication-note">
+          <span class="label">Code availability</span>
+          Implementation and examples will be released after paper publication.
+        </div>
 
         <nav aria-label="Main navigation">
           <a href="#abstract">abstract</a>
@@ -998,153 +1021,3 @@ Report:
                 step="1"
                 value="4"
               />
-
-              <strong id="kappaLabel">10⁴</strong>
-            </div>
-
-            <div class="bar" aria-hidden="true">
-              <div class="bar-fill" id="barFill"></div>
-            </div>
-
-            <div class="toy-output">
-              <div class="measure">
-                <span class="label">matrix scale</span>
-                <span class="value" id="scaleValue">moderate</span>
-              </div>
-
-              <div class="measure">
-                <span class="label">Gram effect</span>
-                <span class="value" id="gramValue">10⁸</span>
-              </div>
-
-              <div class="measure">
-                <span class="label">refinement need</span>
-                <span class="value" id="refineValue">visible</span>
-              </div>
-            </div>
-
-            <p class="muted" style="margin-top: 16px;">
-              This is not a benchmark. It is a reminder: if \( \kappa(A) \)
-              grows, then \( \kappa(A^\mathsf{T}A) \) grows roughly as
-              \( \kappa(A)^2 \).
-            </p>
-          </div>
-        </section>
-
-        <section id="status">
-          <h2>Status</h2>
-
-          <p>
-            QR8 is currently presented as a concise research page and prototype
-            description. The repository can later host the CPU and CUDA versions,
-            benchmark scripts, and reproducibility notes.
-          </p>
-
-          <div class="status-list">
-            <div class="status">
-              <strong>Method note</strong>
-              Drafted.
-            </div>
-
-            <div class="status">
-              <strong>3D sketch</strong>
-              Included.
-            </div>
-
-            <div class="status">
-              <strong>Interactive page</strong>
-              Available.
-            </div>
-
-            <div class="status">
-              <strong>CUDA code</strong>
-              Coming soon.
-            </div>
-          </div>
-        </section>
-
-        <section id="license">
-          <h2>License</h2>
-
-          <p>
-            QR8 is released under the QR8 Beerware License, Revision 42.
-            You may use, copy, modify, distribute, sublicense, and sell the
-            project as long as the license notice is retained.
-          </p>
-
-          <p>
-            If we meet someday and QR8 was useful to you, a beer, coffee, tea,
-            or equivalent symbolic drink is appreciated but not required.
-          </p>
-
-          <p>
-            Read the full text here:
-            <a href="LICENSE.txt">LICENSE.txt</a>.
-          </p>
-        </section>
-      </main>
-
-      <footer>
-        <span>QR8 — INT8-initialized Cholesky-QR with FP64 refinement.</span>
-        <span>Licensed under QR8 Beerware, Revision 42.</span>
-        <span class="footer-calligraphy" lang="fa" dir="rtl">جبر · عدد · پایداری</span>
-      </footer>
-    </div>
-  </div>
-
-  <script>
-    const slider = document.getElementById("kappaSlider");
-    const kappaLabel = document.getElementById("kappaLabel");
-    const gramValue = document.getElementById("gramValue");
-    const scaleValue = document.getElementById("scaleValue");
-    const refineValue = document.getElementById("refineValue");
-    const barFill = document.getElementById("barFill");
-
-    function updateToy() {
-      const p = Number(slider.value);
-
-      kappaLabel.textContent = "10" + superscript(p);
-      gramValue.textContent = "10" + superscript(2 * p);
-      barFill.style.width = Math.max(8, (p / 12) * 100) + "%";
-
-      if (p <= 3) {
-        scaleValue.textContent = "mild";
-        refineValue.textContent = "small";
-      } else if (p <= 6) {
-        scaleValue.textContent = "moderate";
-        refineValue.textContent = "visible";
-      } else if (p <= 9) {
-        scaleValue.textContent = "large";
-        refineValue.textContent = "strong";
-      } else {
-        scaleValue.textContent = "severe";
-        refineValue.textContent = "critical";
-      }
-    }
-
-    function superscript(n) {
-      const map = {
-        "0": "⁰",
-        "1": "¹",
-        "2": "²",
-        "3": "³",
-        "4": "⁴",
-        "5": "⁵",
-        "6": "⁶",
-        "7": "⁷",
-        "8": "⁸",
-        "9": "⁹",
-        "-": "⁻"
-      };
-
-      return String(n)
-        .split("")
-        .map((ch) => map[ch] || ch)
-        .join("");
-    }
-
-    slider.addEventListener("input", updateToy);
-    updateToy();
-  </script>
-</body>
-</html>
