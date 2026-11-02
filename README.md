@@ -16,7 +16,7 @@ This repository provides the official implementation, CUDA benchmark harness, ex
 
 ---
 
-## 💡 Overview
+## Overview
 
 Conventional Cholesky-QR algorithms achieve peak BLAS-3 throughput for tall-and-skinny matrices ($m \gg n$) on GPUs by reducing the dominant work to matrix multiplication ($G = A^TA$) and triangular solves. However, they suffer from quadratic condition number growth ($\kappa(G) = \kappa(A)^2$) and breakdown on ill-conditioned inputs.
 
@@ -28,7 +28,7 @@ Conventional Cholesky-QR algorithms achieve peak BLAS-3 throughput for tall-and-
 
 ---
 
-## 📊 Summary of Implemented Methods
+## Summary of Implemented Methods
 
 | Method | Precision / Formulation | Description |
 |---|---|---|
@@ -44,7 +44,7 @@ Conventional Cholesky-QR algorithms achieve peak BLAS-3 throughput for tall-and-
 
 ---
 
-## ⚡ Quickstart
+## Quickstart
 
 ### Prerequisites
 - NVIDIA GPU with Compute Capability $\ge 7.0$ (e.g., Volta V100, Turing, Ampere RTX A6000, Hopper H100/H200).
@@ -84,23 +84,7 @@ validated 30 rows from results/smoke.csv
 
 ---
 
-## 📈 Paper Figures
-
-All plots from the manuscript are generated with exact publication data and available in vector PDF and PNG formats under `figures/`:
-
-| Figure | Description | Preview |
-|---|---|---|
-| **Phase Breakdown** | Runtime decomposition on NVIDIA H200 NVL across dimensions $m \times n$ | ![Phase Breakdown](docs/images/phase_breakdown_h200.png) |
-| **Accuracy Zones** | Condition-number operating ranges for standard, shifted, and INT8 variants | ![Accuracy Zones](docs/images/kappa_accuracy_zones.png) |
-| **Unrefined Speedup** | Speedup heatmap of unrefined INT8 initialization over FP64 CholeskyQR2 | ![Speedup Heatmap](docs/images/qonly_speedup_heatmap.png) |
-| **Refinement Count** | Iterative refinement count across $(m, \kappa(A))$ on H200 NVL | ![Refinement Count](docs/images/refinement_count_heatmap.png) |
-| **Gram Error** | First-pass Gram error: theory vs. GPU measurement | ![Gram Error](docs/images/gram_error_theory.png) |
-| **Amplification** | Orthogonality loss amplification $\delta_L = \kappa(A)\varepsilon_L$ | ![Amplification](docs/images/kappa_amplification_theory.png) |
-| **Speed-Accuracy Quadrants** | 90-trial paired speedup vs. orthogonality error across condition numbers | ![Quadrant](docs/images/speed_accuracy_quadrant_dual.png) |
-
----
-
-## 🔬 Reproducing Paper Experiments
+## Reproducing Paper Experiments
 
 ### Synthetic Conditioning Grid Sweep
 Run the paired multi-trial benchmark across condition numbers $\kappa(A) \in [10^1, 10^{12}]$:
@@ -135,47 +119,28 @@ sbatch scripts/submit_h200_v2.sbatch
 
 ---
 
-## 📂 Repository Structure
+## Repository Structure
 
 ```text
 qr8/
 ├── Makefile                # Build system (sm_70, sm_86, sm_90, smoke tests)
 ├── README.md               # Main repository documentation
 ├── LICENSE                 # Beerware License (Revision 42)
-├── CITATION.cff            # Citation metadata
 ├── src/
 │   └── qr8_benchmark.cu    # Complete CUDA benchmark implementation
 ├── include/
 │   └── benchmark_types.hpp # Algorithm enums, options, and data structures
-├── figures/                # Publication vector figures (PDF)
 ├── config/                 # Benchmark grids (synthetic, dense sweep, datasets)
 ├── data/                   # SuiteSparse matrix inputs (.qr8, .json)
 ├── scripts/                # Benchmark driver and analysis scripts
 ├── tests/                  # Numerical invariance and output validation
 └── docs/                   # GitHub Pages interactive project website
-    ├── index.html          # Interactive research page & conditioning explorer
-    └── images/             # High-resolution figure previews
+    └── index.html          # Interactive research page & conditioning explorer
 ```
 
 ---
 
-## 📝 Citation
-
-If you use QR8 or build upon this work, please cite:
-
-```bibtex
-@article{sahraneshinsamani2026qr8,
-  title   = {Mixed-Precision {Cholesky-QR} with {INT8} Initialization and {FP64} Refinement for Very Tall Matrices on Heterogeneous {GPUs}},
-  author  = {Sahraneshinsamani, Nima and Aliaga, Jos{\'e} I. and Catal{\'a}n, Sandra and Herrero, Jos{\'e} R.},
-  journal = {SIAM Journal on Scientific Computing (SISC)},
-  note    = {Submitted, Special Section on Iterative and Multigrid Methods},
-  year    = {2026}
-}
-```
-
----
-
-## ⚖️ License
+## License
 
 Released under the **QR8 Beerware License (Revision 42)**.  
 See [LICENSE](LICENSE) for details.

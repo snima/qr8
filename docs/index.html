@@ -7,18 +7,18 @@
   <title>QR8: Mixed-Precision INT8/FP64 Cholesky-QR on GPUs</title>
   <meta
     name="description"
-    content="Mixed-Precision Cholesky-QR with INT8 Initialization and FP64 Refinement for Very Tall Matrices on Heterogeneous GPUs (SIAM SISC 2026)."
+    content="Mixed-Precision Cholesky-QR with INT8 Initialization and FP64 Refinement for Very Tall Matrices on Heterogeneous GPUs."
   />
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300..700;1,8..60,400&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300..700;1,8..60,400&display=swap"
     rel="stylesheet"
   />
 
-  <!-- MathJax for KaTeX/LaTeX rendering -->
+  <!-- MathJax -->
   <script>
     window.MathJax = {
       tex: {
@@ -30,34 +30,35 @@
   </script>
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 
+  <!-- Three.js for 3D Interactive Lab -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
   <style>
     :root {
       --bg: #f9f6ef;
       --bg-card: #ffffff;
-      --bg-subtle: #f1ebd9;
+      --bg-subtle: #f2ebd9;
       --border: #dfd4bf;
-      --border-dark: #bba988;
+      --border-dark: #b6a382;
 
-      --ink: #1a140e;
-      --ink-muted: #5e5040;
-      --ink-faint: #8d7d6a;
+      --ink: #18120c;
+      --ink-muted: #564839;
+      --ink-faint: #887865;
 
       --terracotta: #8b3224;
-      --terracotta-soft: rgba(139, 50, 36, 0.08);
-      --navy: #1b3b52;
-      --navy-soft: rgba(27, 59, 82, 0.07);
+      --navy: #19384e;
       --gold: #b07d2b;
-      --forest: #2d5a3f;
+      --forest: #2a583d;
 
       --serif: "Source Serif 4", Georgia, serif;
       --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       --mono: "Fira Code", monospace;
       --display: "Cinzel", "Source Serif 4", serif;
-      --nastaliq: "Noto Nastaliq Urdu", serif;
 
-      --shadow-sm: 0 2px 6px rgba(26, 20, 14, 0.04);
-      --shadow-md: 0 8px 24px rgba(26, 20, 14, 0.07);
-      --shadow-lg: 0 16px 40px rgba(26, 20, 14, 0.1);
+      --shadow-sm: 0 2px 6px rgba(24, 18, 12, 0.04);
+      --shadow-md: 0 8px 24px rgba(24, 18, 12, 0.07);
+      --shadow-lg: 0 16px 40px rgba(24, 18, 12, 0.1);
 
       --radius-sm: 6px;
       --radius-md: 10px;
@@ -77,15 +78,15 @@
       font-family: var(--sans);
       line-height: 1.68;
       background-image:
-        radial-gradient(ellipse at 50% 0%, rgba(240, 230, 208, 0.7) 0%, transparent 60%),
-        linear-gradient(rgba(26, 20, 14, 0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(26, 20, 14, 0.02) 1px, transparent 1px);
+        radial-gradient(ellipse at 50% 0%, rgba(240, 230, 208, 0.6) 0%, transparent 60%),
+        linear-gradient(rgba(24, 18, 12, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(24, 18, 12, 0.02) 1px, transparent 1px);
       background-size: 100% 100%, 36px 36px, 36px 36px;
       min-height: 100vh;
     }
 
     ::selection {
-      background: var(--terracotta);
+      background: var(--navy);
       color: #fff;
     }
 
@@ -99,14 +100,13 @@
       color: var(--terracotta);
     }
 
-    /* Container */
     .container {
-      width: min(1080px, calc(100% - 3rem));
+      width: min(1040px, calc(100% - 3rem));
       margin: 0 auto;
-      padding: 3rem 0 6rem;
+      padding: 3.5rem 0 5rem;
     }
 
-    /* Header & Hero */
+    /* Header */
     header {
       text-align: center;
       margin-bottom: 3.5rem;
@@ -125,44 +125,43 @@
     .badge {
       display: inline-flex;
       align-items: center;
-      gap: 0.4rem;
-      padding: 0.28rem 0.75rem;
-      font-size: 0.78rem;
+      padding: 0.3rem 0.85rem;
+      font-size: 0.76rem;
       font-weight: 600;
-      letter-spacing: 0.03em;
+      letter-spacing: 0.04em;
       text-transform: uppercase;
       border-radius: 999px;
       border: 1px solid;
     }
     .badge-journal {
-      background: rgba(27, 59, 82, 0.08);
-      border-color: rgba(27, 59, 82, 0.25);
+      background: rgba(25, 56, 78, 0.08);
+      border-color: rgba(25, 56, 78, 0.25);
       color: var(--navy);
     }
     .badge-repro {
-      background: rgba(45, 90, 63, 0.08);
-      border-color: rgba(45, 90, 63, 0.25);
+      background: rgba(42, 88, 61, 0.08);
+      border-color: rgba(42, 88, 61, 0.25);
       color: var(--forest);
     }
     .badge-gpu {
-      background: rgba(176, 125, 43, 0.1);
-      border-color: rgba(176, 125, 43, 0.3);
-      color: #7a5214;
+      background: rgba(176, 125, 43, 0.09);
+      border-color: rgba(176, 125, 43, 0.28);
+      color: #734e15;
     }
 
     .hero-pretitle {
       font-family: var(--display);
-      font-size: 0.95rem;
-      letter-spacing: 0.25em;
+      font-size: 0.92rem;
+      letter-spacing: 0.22em;
       text-transform: uppercase;
       color: var(--terracotta);
-      margin-bottom: 0.8rem;
+      margin-bottom: 0.9rem;
       font-weight: 700;
     }
 
     h1.hero-title {
       font-family: var(--serif);
-      font-size: clamp(2rem, 3.8vw, 2.9rem);
+      font-size: clamp(2.1rem, 3.8vw, 2.9rem);
       font-weight: 700;
       line-height: 1.25;
       color: var(--ink);
@@ -180,7 +179,6 @@
       margin: 0 auto 1.8rem;
     }
 
-    /* Authors */
     .authors-grid {
       display: flex;
       flex-wrap: wrap;
@@ -202,7 +200,6 @@
       color: var(--ink-faint);
     }
 
-    /* Action Buttons */
     .hero-actions {
       display: flex;
       flex-wrap: wrap;
@@ -229,7 +226,7 @@
       box-shadow: var(--shadow-sm);
     }
     .btn-primary:hover {
-      background: #122838;
+      background: #112636;
       color: #fff;
       transform: translateY(-1px);
       box-shadow: var(--shadow-md);
@@ -249,7 +246,7 @@
 
     /* Sections */
     section {
-      margin-bottom: 4rem;
+      margin-bottom: 4.5rem;
     }
     .section-header {
       display: flex;
@@ -274,46 +271,7 @@
       letter-spacing: 0.08em;
     }
 
-    /* Card Layouts */
-    .cards-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
-      gap: 1.4rem;
-    }
-    .card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 1.5rem;
-      box-shadow: var(--shadow-sm);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .card:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
-      border-color: var(--border-dark);
-    }
-    .card-title {
-      font-family: var(--serif);
-      font-size: 1.2rem;
-      font-weight: 700;
-      color: var(--navy);
-      margin-bottom: 0.6rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    .card-title .icon {
-      font-size: 1.1rem;
-      color: var(--terracotta);
-    }
-    .card p {
-      font-size: 0.93rem;
-      color: var(--ink-muted);
-      line-height: 1.65;
-    }
-
-    /* Abstract Lead Box */
+    /* Abstract Lead */
     .lead-box {
       background: var(--bg-card);
       border: 1px solid var(--border);
@@ -331,14 +289,162 @@
       margin-top: 1rem;
     }
 
-    /* Interactive Matrix Explorer Widget */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.4rem;
+    }
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .card-title {
+      font-family: var(--serif);
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 0.6rem;
+    }
+    .card p {
+      font-size: 0.92rem;
+      color: var(--ink-muted);
+      line-height: 1.65;
+    }
+
+    /* 3D Interactive Lab */
+    .lab-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border-dark);
+      border-radius: var(--radius-lg);
+      padding: 1.8rem;
+      box-shadow: var(--shadow-md);
+    }
+    .lab-desc {
+      font-size: 0.95rem;
+      color: var(--ink-muted);
+      margin-bottom: 1.2rem;
+    }
+    .canvas-wrapper {
+      position: relative;
+      width: 100%;
+      height: 480px;
+      background: #0f141a;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid #232d38;
+      cursor: grab;
+    }
+    .canvas-wrapper:active {
+      cursor: grabbing;
+    }
+    #three-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .hud-overlay {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      background: rgba(15, 20, 26, 0.82);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-sm);
+      padding: 0.8rem 1rem;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: #e2e8f0;
+      line-height: 1.6;
+      pointer-events: none;
+    }
+    .hud-overlay span.val {
+      color: #68d391;
+      font-weight: 600;
+    }
+    .hud-overlay span.alert {
+      color: #fc8181;
+    }
+    .hud-hint {
+      position: absolute;
+      bottom: 12px;
+      right: 14px;
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.55);
+      font-family: var(--sans);
+      pointer-events: none;
+    }
+
+    .lab-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.2rem;
+      margin-top: 1.4rem;
+      padding-top: 1.2rem;
+      border-top: 1px solid var(--border);
+    }
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+    .control-label {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .btn-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .lab-btn {
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-dark);
+      background: var(--bg-subtle);
+      color: var(--ink);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .lab-btn:hover {
+      background: var(--navy);
+      color: #fff;
+      border-color: var(--navy);
+    }
+    .lab-btn.active {
+      background: var(--terracotta);
+      color: #fff;
+      border-color: var(--terracotta);
+    }
+
+    /* 2D Architecture Diagram */
+    .sketch-card {
+      background: #faf7f0;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+      text-align: center;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.03);
+    }
+    .sketch-card svg {
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* Simulator Panel */
     .toy-panel {
       background: var(--bg-card);
       border: 1px solid var(--border-dark);
       border-radius: var(--radius-lg);
       padding: 2rem 2.4rem;
-      box-shadow: var(--shadow-md);
-      margin: 2.5rem 0;
+      box-shadow: var(--shadow-sm);
     }
     .toy-header {
       text-align: center;
@@ -417,170 +523,43 @@
     .status-warn { color: var(--gold); }
     .status-fail { color: var(--terracotta); }
 
-    /* Visual 3D SVG Sketch */
-    .sketch-card {
-      background: #faf7f0;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 1rem;
-      margin-top: 1.5rem;
-      text-align: center;
-      box-shadow: inset 0 1px 3px rgba(0,0,0,0.03);
-    }
-    .sketch-card svg {
-      max-width: 100%;
-      height: auto;
-    }
-
-    /* Figure Gallery Showcase */
-    .figures-tabs-container {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 1.8rem;
-      box-shadow: var(--shadow-sm);
-    }
-    .tab-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 1rem;
-      margin-bottom: 1.5rem;
-    }
-    .tab-btn {
-      background: var(--bg-subtle);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 0.45rem 0.9rem;
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--ink-muted);
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-    .tab-btn:hover, .tab-btn.active {
-      background: var(--navy);
-      color: #fff;
-      border-color: var(--navy);
-    }
-    .figure-display {
-      display: none;
-      animation: fadeIn 0.3s ease;
-    }
-    .figure-display.active {
-      display: block;
-    }
-    .figure-img-wrap {
-      text-align: center;
-      background: #fff;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      padding: 1rem;
-      margin-bottom: 1rem;
-    }
-    .figure-img-wrap img {
-      max-width: 100%;
-      height: auto;
-      max-height: 480px;
-      object-fit: contain;
-    }
-    .figure-caption {
-      font-size: 0.9rem;
-      line-height: 1.6;
-      color: var(--ink-muted);
-    }
-    .figure-caption strong {
-      color: var(--ink);
-    }
-
-    /* Terminal Code Block */
+    /* Code Terminal */
     .terminal-box {
-      background: #191410;
-      color: #ebd9c5;
+      background: #15191e;
+      color: #e2e8f0;
       border-radius: var(--radius-md);
       padding: 1.4rem 1.6rem;
       font-family: var(--mono);
       font-size: 0.88rem;
       line-height: 1.6;
       overflow-x: auto;
-      position: relative;
       margin: 1rem 0;
-      box-shadow: var(--shadow-md);
-      border: 1px solid #33261a;
+      border: 1px solid #283340;
     }
     .terminal-box .cmd {
-      color: #78c47b;
+      color: #68d391;
       user-select: all;
     }
     .terminal-box .comment {
-      color: #8c7662;
+      color: #718096;
     }
 
-    /* BibTeX Citation */
-    .bibtex-box {
-      background: #fdfbf7;
-      border: 1px solid var(--border-dark);
-      border-radius: var(--radius-sm);
-      padding: 1.2rem 1.5rem;
-      font-family: var(--mono);
-      font-size: 0.82rem;
-      line-height: 1.6;
-      overflow-x: auto;
-      color: var(--ink);
-      position: relative;
-    }
-    .copy-btn {
-      position: absolute;
-      top: 0.8rem;
-      right: 0.8rem;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      padding: 0.3rem 0.65rem;
-      font-size: 0.75rem;
-      font-weight: 600;
-      border-radius: 4px;
-      cursor: pointer;
-      color: var(--ink);
-      transition: all 0.2s ease;
-    }
-    .copy-btn:hover {
-      background: var(--terracotta);
-      color: #fff;
-      border-color: var(--terracotta);
-    }
-
-    /* Footer */
     footer {
-      border-top: 2px solid var(--border);
-      padding-top: 2.5rem;
+      border-top: 1px solid var(--border);
+      padding-top: 2rem;
       margin-top: 4rem;
       text-align: center;
       color: var(--ink-muted);
       font-size: 0.88rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.8rem;
-      align-items: center;
-    }
-    .footer-calligraphy {
-      font-family: var(--nastaliq);
-      font-size: 1.8rem;
-      color: var(--terracotta);
-      margin-top: 0.4rem;
-      letter-spacing: 0.05em;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(4px); }
-      to { opacity: 1; transform: translateY(0); }
     }
 
     @media (max-width: 768px) {
       .container { width: calc(100% - 2rem); }
       h1.hero-title { font-size: 1.85rem; }
       .authors-grid { gap: 1.2rem; }
-      .toy-panel { padding: 1.5rem 1.2rem; }
+      .toy-panel, .lab-container { padding: 1.4rem 1rem; }
+      .canvas-wrapper { height: 360px; }
+      .lab-controls { flex-direction: column; align-items: stretch; }
     }
   </style>
 </head>
@@ -592,7 +571,7 @@
     <header>
       <div class="status-badge-row">
         <span class="badge badge-journal">SIAM Journal on Scientific Computing (SISC)</span>
-        <span class="badge badge-repro">✓ Reproducibility: Code & Data Available</span>
+        <span class="badge badge-repro">Reproducibility: Code & Data Available</span>
         <span class="badge badge-gpu">NVIDIA V100S · RTX A6000 · H200 NVL</span>
       </div>
 
@@ -632,129 +611,168 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
           GitHub Repository
         </a>
+        <a href="#lab3d" class="btn btn-secondary">
+          3D Interactive Lab
+        </a>
+        <a href="#method" class="btn btn-secondary">
+          Pipeline Architecture
+        </a>
         <a href="#quickstart" class="btn btn-secondary">
-          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 17l6-6-6-6m8 12h8"/></svg>
           Quickstart & Build
-        </a>
-        <a href="#figures" class="btn btn-secondary">
-          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-          Key Findings & Figures
-        </a>
-        <a href="#interactive" class="btn btn-secondary">
-          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-          Interactive Explorer
         </a>
       </div>
     </header>
 
-    <!-- ABSTRACT & KEY CONTRIBUTIONS -->
+    <!-- ABSTRACT -->
     <section id="abstract">
       <div class="lead-box">
         <p>
           <strong>Abstract.</strong> Conventional Cholesky-QR methods achieve high BLAS-3 efficiency for tall-and-skinny matrices (\(m \gg n\)) on GPUs, but suffer from numerical instability and Cholesky breakdown on ill-conditioned inputs. We present a mixed-precision Cholesky-QR pipeline that forms a coarse initial Gram matrix using 8-bit integer (INT8) matrix multiplication (via Tensor Cores or <code>DP4A</code> vector instructions) with exact INT32 accumulation, followed by FP64 Cholesky factorization and iterative refinement (with optional diagonal shifting) to recover working-precision orthogonality.
         </p>
         <p>
-          We analyze two INT8 initializers: a single-product scheme (L1) and a residual-corrected scheme (L2). Our structured perturbation analysis shows that the first-pass loss of orthogonality grows linearly with the matrix condition number prior to saturation (\(\delta_L = \kappa(A)\varepsilon_L\)), and that L2 quantization reduces the leading residual scale by a factor of \(254\), extending the admissible condition-number range for single-pass refinement by roughly two orders of magnitude. Benchmarks across NVIDIA V100S, RTX A6000, and H200 NVL GPUs on synthetic and SuiteSparse matrices show that shifted adaptive variants preserve double-precision orthogonality up to \(\kappa(A)=10^{10}\)---where standard unshifted <code>FP64-CholQR2</code> breaks down---at a runtime comparable to shifted FP64 Cholesky-QR.
+          We analyze two INT8 initializers: a single-product scheme (L1) and a residual-corrected scheme (L2). Our structured perturbation analysis shows that the first-pass loss of orthogonality grows linearly with the matrix condition number prior to saturation (\(\delta_L = \kappa(A)\varepsilon_L\)), and that L2 quantization reduces the leading residual scale by a factor of \(254\), extending the admissible condition-number range for single-pass refinement by roughly two orders of magnitude. Benchmarks across NVIDIA V100S, RTX A6000, and H200 NVL GPUs show that shifted adaptive variants preserve double-precision orthogonality up to \(\kappa(A)=10^{10}\) at a runtime comparable to shifted FP64 Cholesky-QR, while delivering up to \(1.28\times\) validated speed-up over matched adaptive FP64 Cholesky-QR and up to \(10.0\times\) over cuSOLVER-QR when an unrefined coarse basis suffices.
         </p>
       </div>
 
       <div class="cards-grid">
         <div class="card">
-          <div class="card-title"><span class="icon">⚡</span> Exact INT32 Accumulation</div>
+          <div class="card-title">Exact INT32 Accumulation</div>
           <p>
-            By accumulating dot-products exactly into 32-bit signed integers, floating-point summation drift is completely abolished (\(\Delta G_{\mathrm{acc}} = 0\)). The symmetric Gram structure is preserved (\(B_L^T B_L \succeq 0\)), preventing premature indefinite breakdown.
+            Accumulating inner products exactly into 32-bit signed integers eliminates floating-point accumulation drift (\(\Delta G_{\mathrm{acc}} = 0\)) and strictly preserves positive semi-definiteness (\(B_L^T B_L \succeq 0\)).
           </p>
         </div>
 
         <div class="card">
-          <div class="card-title"><span class="icon">🎯</span> Two-Slice Residual Correction (L2)</div>
+          <div class="card-title">Two-Slice Residual Correction (L2)</div>
           <p>
-            The L2 initializer forms a primary INT8 pass plus a quantized residual slice, cutting leading quantization noise by a factor of \(2q = 254\) (\(\approx 48\) dB). This shifts the single-refinement threshold from \(\kappa(A) \approx 10^2\) to \(\kappa(A) \approx 10^4\).
+            Two-slice quantization reduces leading noise by a factor of \(2q = 254\) (\(\approx 48\) dB), shifting the effective single-refinement threshold from \(\kappa(A) \approx 10^2\) to \(\kappa(A) \approx 10^4\).
           </p>
         </div>
 
         <div class="card">
-          <div class="card-title"><span class="icon">🛡️</span> Residual-Variance Shifting</div>
+          <div class="card-title">Residual-Variance Shifting</div>
           <p>
-            A closed-form diagonal shift \(s_{\mathrm{var}} = \frac{m}{12}\sum_{j=1}^n \alpha_{2j}^2\) based on uniform rounding variance eliminates Cholesky breakdowns on ill-conditioned problems, guaranteeing 100% completion up to \(\kappa(A) = 10^{10}\).
+            The uniform rounding-variance diagonal shift \(s_{\mathrm{var}} = \frac{m}{12}\sum \alpha_{2j}^2\) restores 100% completion on ill-conditioned problems up to \(\kappa(A) = 10^{10}\).
           </p>
         </div>
       </div>
     </section>
 
-    <!-- 3D WORKFLOW SKETCH -->
-    <section id="sketch">
+    <!-- 3D INTERACTIVE LAB (WebGL with mouse) -->
+    <section id="lab3d">
+      <div class="section-header">
+        <h2 class="section-title">3D Interactive Orthogonality Laboratory</h2>
+        <span class="section-tag">WebGL Interactive</span>
+      </div>
+
+      <div class="lab-container">
+        <p class="lab-desc">
+          Click and drag in the 3D viewport to inspect the geometric transformation of column vectors. Observe how increasing matrix ill-conditioning causes the basis to shear and collapse, how coarse INT8 quantization snaps the frame to a discrete lattice, and how FP64 refinement recovers an exact orthonormal frame.
+        </p>
+
+        <div class="canvas-wrapper">
+          <canvas id="three-canvas"></canvas>
+
+          <div class="hud-overlay">
+            <div>Conditioning: <span id="hud-cond" class="val">Well-Conditioned (&kappa; &approx; 1.0)</span></div>
+            <div>Orthogonality &Vert;Q<sup>T</sup>Q &minus; I&Vert;: <span id="hud-ortho" class="val">0.000 (Exact)</span></div>
+            <div>Basis Volume det(A): <span id="hud-vol" class="val">1.000</span></div>
+            <div>Status: <span id="hud-status" class="val">Orthonormal Basis</span></div>
+          </div>
+
+          <div class="hud-hint">
+            Rotate: Left Click + Drag &nbsp;|&nbsp; Zoom: Scroll Wheel &nbsp;|&nbsp; Pan: Right Click + Drag
+          </div>
+        </div>
+
+        <div class="lab-controls">
+          <div class="control-group">
+            <span class="control-label">Matrix Shear / Condition:</span>
+            <input type="range" id="shearSlider" min="0" max="85" value="0" style="width: 140px; accent-color: var(--terracotta);" />
+          </div>
+
+          <div class="btn-group">
+            <button class="lab-btn" id="btn-int8">Apply INT8 Quantization</button>
+            <button class="lab-btn" id="btn-refine">Apply FP64 Refinement</button>
+            <button class="lab-btn" id="btn-reset">Reset</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PIPELINE ARCHITECTURE (SVG) -->
+    <section id="method">
       <div class="section-header">
         <h2 class="section-title">The Mixed-Precision Pipeline</h2>
         <span class="section-tag">Architecture</span>
       </div>
 
       <div class="sketch-card">
-        <svg viewBox="0 0 920 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mixed precision pipeline workflow">
+        <svg viewBox="0 0 920 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mixed precision pipeline workflow">
           <defs>
             <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-              <polygon points="0 0, 8 3, 0 6" fill="#1b3b52" />
+              <polygon points="0 0, 8 3, 0 6" fill="#19384e" />
             </marker>
           </defs>
 
           <!-- Input Matrix A -->
-          <rect x="30" y="50" width="80" height="240" rx="4" fill="#f4ebd9" stroke="#b07d2b" stroke-width="2"/>
-          <text x="70" y="175" text-anchor="middle" font-family="Source Serif 4" font-weight="700" font-size="20" fill="#1a140e">A</text>
-          <text x="70" y="200" text-anchor="middle" font-family="Inter" font-size="12" fill="#5e5040">m × n</text>
-          <text x="70" y="218" text-anchor="middle" font-family="Inter" font-size="11" fill="#8b3224">FP64</text>
+          <rect x="30" y="45" width="80" height="230" rx="4" fill="#f4ebd9" stroke="#b07d2b" stroke-width="2"/>
+          <text x="70" y="165" text-anchor="middle" font-family="Source Serif 4" font-weight="700" font-size="20" fill="#18120c">A</text>
+          <text x="70" y="190" text-anchor="middle" font-family="Inter" font-size="12" fill="#564839">m × n</text>
+          <text x="70" y="208" text-anchor="middle" font-family="Inter" font-size="11" fill="#8b3224">FP64</text>
 
           <!-- Arrow 1 -->
-          <line x1="120" y1="170" x2="175" y2="170" stroke="#1b3b52" stroke-width="2" marker-end="url(#arrow)"/>
-          <text x="148" y="160" text-anchor="middle" font-family="Inter" font-size="11" font-weight="600" fill="#1b3b52">Quantize</text>
+          <line x1="120" y1="160" x2="175" y2="160" stroke="#19384e" stroke-width="2" marker-end="url(#arrow)"/>
+          <text x="148" y="150" text-anchor="middle" font-family="Inter" font-size="11" font-weight="600" fill="#19384e">Quantize</text>
 
-          <!-- Step 1: INT8 GEMM -->
-          <rect x="185" y="80" width="170" height="180" rx="6" fill="#fff" stroke="#1b3b52" stroke-width="2" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.06))"/>
-          <rect x="185" y="80" width="170" height="36" rx="6 6 0 0" fill="#1b3b52"/>
-          <text x="270" y="103" text-anchor="middle" font-family="Inter" font-weight="700" font-size="13" fill="#fff">Stage 1: Coarse Gram</text>
-          <text x="270" y="140" text-anchor="middle" font-family="Source Serif 4" font-size="15" fill="#1a140e">\( \tilde{G} = \alpha^2 B^T B \)</text>
-          <text x="270" y="170" text-anchor="middle" font-family="Fira Code" font-size="11" fill="#8b3224">cublasGemmEx (INT8)</text>
-          <text x="270" y="195" text-anchor="middle" font-family="Inter" font-size="11" fill="#2d5a3f">Exact INT32 Accum</text>
-          <text x="270" y="220" text-anchor="middle" font-family="Inter" font-size="11" fill="#5e5040">Optional Shift \(s_{\mathrm{var}} I\)</text>
+          <!-- Stage 1: INT8 GEMM -->
+          <rect x="185" y="70" width="170" height="180" rx="6" fill="#fff" stroke="#19384e" stroke-width="2"/>
+          <rect x="185" y="70" width="170" height="36" rx="6 6 0 0" fill="#19384e"/>
+          <text x="270" y="93" text-anchor="middle" font-family="Inter" font-weight="700" font-size="13" fill="#fff">Stage 1: Coarse Gram</text>
+          <text x="270" y="130" text-anchor="middle" font-family="Source Serif 4" font-size="15" fill="#18120c">\( \tilde{G} = \alpha^2 B^T B \)</text>
+          <text x="270" y="160" text-anchor="middle" font-family="Fira Code" font-size="11" fill="#8b3224">cublasGemmEx (INT8)</text>
+          <text x="270" y="185" text-anchor="middle" font-family="Inter" font-size="11" fill="#2a583d">Exact INT32 Accum</text>
+          <text x="270" y="210" text-anchor="middle" font-family="Inter" font-size="11" fill="#564839">Optional Shift \(s_{\mathrm{var}} I\)</text>
 
           <!-- Arrow 2 -->
-          <line x1="365" y1="170" x2="420" y2="170" stroke="#1b3b52" stroke-width="2" marker-end="url(#arrow)"/>
+          <line x1="365" y1="160" x2="420" y2="160" stroke="#19384e" stroke-width="2" marker-end="url(#arrow)"/>
 
-          <!-- Step 2: FP64 Cholesky & Solve -->
-          <rect x="430" y="80" width="170" height="180" rx="6" fill="#fff" stroke="#b07d2b" stroke-width="2" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.06))"/>
-          <rect x="430" y="80" width="170" height="36" rx="6 6 0 0" fill="#b07d2b"/>
-          <text x="515" y="103" text-anchor="middle" font-family="Inter" font-weight="700" font-size="13" fill="#fff">Stage 2: Factor & Solve</text>
-          <text x="515" y="140" text-anchor="middle" font-family="Source Serif 4" font-size="15" fill="#1a140e">\( \tilde{G} = R_0^T R_0 \)</text>
-          <text x="515" y="170" text-anchor="middle" font-family="Fira Code" font-size="11" fill="#1b3b52">dpotrf (FP64)</text>
-          <text x="515" y="200" text-anchor="middle" font-family="Source Serif 4" font-size="15" fill="#1a140e">\( Q_0 = A R_0^{-1} \)</text>
-          <text x="515" y="230" text-anchor="middle" font-family="Fira Code" font-size="11" fill="#1b3b52">dtrsm (FP64)</text>
+          <!-- Stage 2: FP64 Cholesky & Solve -->
+          <rect x="430" y="70" width="170" height="180" rx="6" fill="#fff" stroke="#b07d2b" stroke-width="2"/>
+          <rect x="430" y="70" width="170" height="36" rx="6 6 0 0" fill="#b07d2b"/>
+          <text x="515" y="93" text-anchor="middle" font-family="Inter" font-weight="700" font-size="13" fill="#fff">Stage 2: Factor & Solve</text>
+          <text x="515" y="130" text-anchor="middle" font-family="Source Serif 4" font-size="15" fill="#18120c">\( \tilde{G} = R_0^T R_0 \)</text>
+          <text x="515" y="160" text-anchor="middle" font-family="Fira Code" font-size="11" fill="#19384e">dpotrf (FP64)</text>
+          <text x="515" y="190" text-anchor="middle" font-family="Source Serif 4" font-size="15" fill="#18120c">\( Q_0 = A R_0^{-1} \)</text>
+          <text x="515" y="220" text-anchor="middle" font-family="Fira Code" font-size="11" fill="#19384e">dtrsm (FP64)</text>
 
           <!-- Arrow 3 -->
-          <line x1="610" y1="170" x2="665" y2="170" stroke="#1b3b52" stroke-width="2" marker-end="url(#arrow)"/>
+          <line x1="610" y1="160" x2="665" y2="160" stroke="#19384e" stroke-width="2" marker-end="url(#arrow)"/>
 
-          <!-- Step 3: Adaptive Refinement -->
-          <rect x="675" y="80" width="200" height="180" rx="6" fill="#fff" stroke="#2d5a3f" stroke-width="2" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.06))"/>
-          <rect x="675" y="80" width="200" height="36" rx="6 6 0 0" fill="#2d5a3f"/>
-          <text x="775" y="103" text-anchor="middle" font-family="Inter" font-weight="700" font-size="13" fill="#fff">Stage 3: FP64 Polish</text>
-          <text x="775" y="140" text-anchor="middle" font-family="Inter" font-size="12" fill="#1a140e">Check \( \|Q_k^TQ_k - I\| \le \tau \)</text>
-          <text x="775" y="170" text-anchor="middle" font-family="Source Serif 4" font-size="14" fill="#2d5a3f">\( G_k = Q_k^T Q_k = R_{k+1}^T R_{k+1} \)</text>
-          <text x="775" y="200" text-anchor="middle" font-family="Source Serif 4" font-size="14" fill="#2d5a3f">\( Q_{k+1} = Q_k R_{k+1}^{-1} \)</text>
-          <text x="775" y="230" text-anchor="middle" font-family="Inter" font-weight="600" font-size="12" fill="#8b3224">Working-Precision \( \sim 10^{-13} \)</text>
+          <!-- Stage 3: Adaptive Refinement -->
+          <rect x="675" y="70" width="200" height="180" rx="6" fill="#fff" stroke="#2a583d" stroke-width="2"/>
+          <rect x="675" y="70" width="200" height="36" rx="6 6 0 0" fill="#2a583d"/>
+          <text x="775" y="93" text-anchor="middle" font-family="Inter" font-weight="700" font-size="13" fill="#fff">Stage 3: FP64 Polish</text>
+          <text x="775" y="130" text-anchor="middle" font-family="Inter" font-size="12" fill="#18120c">Check \( \|Q_k^TQ_k - I\| \le \tau \)</text>
+          <text x="775" y="160" text-anchor="middle" font-family="Source Serif 4" font-size="14" fill="#2a583d">\( G_k = Q_k^T Q_k = R_{k+1}^T R_{k+1} \)</text>
+          <text x="775" y="190" text-anchor="middle" font-family="Source Serif 4" font-size="14" fill="#2a583d">\( Q_{k+1} = Q_k R_{k+1}^{-1} \)</text>
+          <text x="775" y="220" text-anchor="middle" font-family="Inter" font-weight="600" font-size="12" fill="#8b3224">Working-Precision \( \sim 10^{-13} \)</text>
         </svg>
       </div>
     </section>
 
-    <!-- INTERACTIVE EXPLORER WIDGET -->
-    <section id="interactive">
+    <!-- CONDITIONING SIMULATOR -->
+    <section id="simulator">
       <div class="section-header">
-        <h2 class="section-title">Interactive Conditioning Explorer</h2>
-        <span class="section-tag">Simulation</span>
+        <h2 class="section-title">Conditioning & Error Simulator</h2>
+        <span class="section-tag">Mathematical Bounds</span>
       </div>
 
       <div class="toy-panel">
         <div class="toy-header">
-          <h3>Gram Conditioning & Error Amplification Simulator</h3>
+          <h3>Gram Conditioning & Error Amplification</h3>
           <p>
-            Drag the condition number \(\kappa(A)\) slider to observe how the Gram matrix condition number grows quadratically, how INT8 quantization error scales, and how many refinement passes are required to achieve machine precision.
+            Vary the matrix condition number \(\kappa(A)\) to observe quadratic Gram amplification, L1 vs L2 quantization bounds, and required refinement stages.
           </p>
         </div>
 
@@ -770,19 +788,19 @@
           <div class="metric-box">
             <div class="metric-label">Gram Condition \(\kappa(A^TA)\)</div>
             <div class="metric-num" id="gramCond">10⁶</div>
-            <div class="metric-status" id="gramNote">Squaring effect</div>
+            <div class="metric-status" id="gramNote">Squaring Effect</div>
           </div>
 
           <div class="metric-box">
             <div class="metric-label">L1 Initial Error \(\delta_{L1}\)</div>
             <div class="metric-num" id="l1Error">7.8 × 10⁻³</div>
-            <div class="metric-status" id="l1Note">Single INT8 pass</div>
+            <div class="metric-status" id="l1Note">Single INT8 Slice</div>
           </div>
 
           <div class="metric-box">
             <div class="metric-label">L2 Initial Error \(\delta_{L2}\)</div>
             <div class="metric-num" id="l2Error">3.1 × 10⁻⁵</div>
-            <div class="metric-status" id="l2Note">254× noise reduction</div>
+            <div class="metric-status" id="l2Note">254× Noise Reduction</div>
           </div>
 
           <div class="metric-box">
@@ -794,105 +812,15 @@
       </div>
     </section>
 
-    <!-- KEY FINDINGS & FIGURE GALLERY -->
-    <section id="figures">
-      <div class="section-header">
-        <h2 class="section-title">Key Findings & Publication Figures</h2>
-        <span class="section-tag">Empirical Results</span>
-      </div>
-
-      <div class="figures-tabs-container">
-        <div class="tab-buttons">
-          <button class="tab-btn active" onclick="showFigure('quadrant')">Speed-Accuracy Quadrants</button>
-          <button class="tab-btn" onclick="showFigure('zones')">Accuracy Zones</button>
-          <button class="tab-btn" onclick="showFigure('h200')">H200 Phase Breakdown</button>
-          <button class="tab-btn" onclick="showFigure('qonly')">Unrefined Speedup Heatmap</button>
-          <button class="tab-btn" onclick="showFigure('refine')">Refinement Count Heatmap</button>
-          <button class="tab-btn" onclick="showFigure('amplification')">Amplification Theory</button>
-          <button class="tab-btn" onclick="showFigure('gram')">Gram Error Theory</button>
-        </div>
-
-        <!-- Fig: Quadrant -->
-        <div id="fig-quadrant" class="figure-display active">
-          <div class="figure-img-wrap">
-            <img src="images/speed_accuracy_quadrant_dual.png" alt="Speed-Accuracy Quadrants" />
-          </div>
-          <div class="figure-caption">
-            <strong>Figure: Speed-Accuracy Trade-off across Condition Numbers.</strong> 90-trial paired speedup vs. orthogonality error on synthetic matrices. Adaptive INT8-L1 and INT8-L2 maintain double-precision orthogonality (\(\sim 10^{-13}\)) up to \(\kappa(A)=10^{10}\) while achieving up to \(1.28\times\) speedup over standard FP64 Cholesky-QR at \(\kappa(A)=10^2\).
-          </div>
-        </div>
-
-        <!-- Fig: Zones -->
-        <div id="fig-zones" class="figure-display">
-          <div class="figure-img-wrap">
-            <img src="images/kappa_accuracy_zones.png" alt="Condition-Number Accuracy Zones" />
-          </div>
-          <div class="figure-caption">
-            <strong>Figure: Condition-Number Operating Envelopes.</strong> Unshifted standard CholeskyQR breaks down past \(\kappa(A) \approx 10^7\) due to \(A^TA\) becoming numerically indefinite. Our residual-variance diagonal shift \(s_{\mathrm{var}}\) extends the stable operating regime across all tested GPUs up to \(\kappa(A)=10^{10}\).
-          </div>
-        </div>
-
-        <!-- Fig: H200 -->
-        <div id="fig-h200" class="figure-display">
-          <div class="figure-img-wrap">
-            <img src="images/phase_breakdown_h200.png" alt="Runtime Phase Breakdown on H200" />
-          </div>
-          <div class="figure-caption">
-            <strong>Figure: Kernel Phase Breakdown on NVIDIA H200 NVL.</strong> Runtime proportion of Gram GEMM (INT8 vs FP64), FP64 Cholesky factorization (dpotrf), and triangular solve (dtrsm). As matrix height \(m\) grows, INT8 GEMM dominates throughput gains, while Amdahl's law governs total end-to-end acceleration.
-          </div>
-        </div>
-
-        <!-- Fig: Q-Only Heatmap -->
-        <div id="fig-qonly" class="figure-display">
-          <div class="figure-img-wrap">
-            <img src="images/qonly_speedup_heatmap.png" alt="Q-Only Speedup Heatmap" />
-          </div>
-          <div class="figure-caption">
-            <strong>Figure: Coarse Basis Speedup Heatmap (\(m \times n\)).</strong> When an unrefined coarse basis suffices (e.g. randomized sketch preconditioning), unrefined INT8 initialization delivers \(2.1\times\)–\(3.7\times\) speedup over FP64-CholQR2 and up to \(10.0\times\) over vendor cuSOLVER Householder QR.
-          </div>
-        </div>
-
-        <!-- Fig: Refinement Count -->
-        <div id="fig-refine" class="figure-display">
-          <div class="figure-img-wrap">
-            <img src="images/refinement_count_heatmap.png" alt="Refinement Count Heatmap" />
-          </div>
-          <div class="figure-caption">
-            <strong>Figure: Required Refinement Passes on H200 NVL.</strong> Heatmap across matrix aspect ratios and condition numbers showing required refinement count. Residual correction (L2) prevents extra passes up to \(\kappa(A) \approx 10^4\).
-          </div>
-        </div>
-
-        <!-- Fig: Amplification -->
-        <div id="fig-amplification" class="figure-display">
-          <div class="figure-img-wrap">
-            <img src="images/kappa_amplification_theory.png" alt="Condition Amplification Theory" />
-          </div>
-          <div class="figure-caption">
-            <strong>Figure: First-Pass Orthogonality Error Amplification.</strong> Comparison of structured perturbation theory bound (\(\delta_L = \kappa(A)\varepsilon_L\)) against measured GPU loss of orthogonality across NVIDIA V100S, RTX A6000, and H200 NVL.
-          </div>
-        </div>
-
-        <!-- Fig: Gram Error -->
-        <div id="fig-gram" class="figure-display">
-          <div class="figure-img-wrap">
-            <img src="images/gram_error_theory.png" alt="Gram Error Theory" />
-          </div>
-          <div class="figure-caption">
-            <strong>Figure: Gram Relative Error: Measured vs Theoretical Bound.</strong> Demonstration that exact INT32 accumulation limits Gram error strictly to quantization error (\(\Delta G_{\mathrm{quant}}\)), completely eliminating accumulation drift.
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- QUICKSTART & REPRODUCIBILITY -->
+    <!-- QUICKSTART -->
     <section id="quickstart">
       <div class="section-header">
         <h2 class="section-title">Quickstart & Reproducibility</h2>
-        <span class="section-tag">Code & Data</span>
+        <span class="section-tag">Build & Run</span>
       </div>
 
       <p style="margin-bottom: 1rem; color: var(--ink-muted);">
-        The benchmark harness is self-contained with no external dependencies beyond the standard CUDA Toolkit and Python 3. Build and validate on your local GPU in seconds:
+        The benchmark harness is self-contained with no external dependencies beyond the standard CUDA Toolkit and Python 3. Build and validate on your local GPU:
       </p>
 
       <div class="terminal-box">
@@ -903,7 +831,7 @@
 <span class="comment"># 2. Compile benchmark harness (native GPU detection)</span>
 <span class="cmd">make</span>
 
-<span class="comment"># Or target a specific architecture:</span>
+<span class="comment"># Target specific architecture if desired:</span>
 <span class="comment"># make CUDA_ARCH=sm_70   # NVIDIA V100 / V100S</span>
 <span class="comment"># make CUDA_ARCH=sm_86   # NVIDIA RTX A6000</span>
 <span class="comment"># make CUDA_ARCH=sm_90   # NVIDIA Hopper H100 / H200 NVL</span>
@@ -913,7 +841,7 @@
       </div>
 
       <div class="card" style="margin-top: 1.5rem;">
-        <div class="card-title"><span class="icon">📁</span> Pre-Packaged Benchmark Suites</div>
+        <div class="card-title">Pre-Packaged Benchmark Suites</div>
         <p>
           To reproduce the paired synthetic condition-number sweep:
           <br />
@@ -926,114 +854,333 @@
       </div>
     </section>
 
-    <!-- CITATION -->
-    <section id="citation">
-      <div class="section-header">
-        <h2 class="section-title">Citation</h2>
-        <span class="section-tag">BibTeX</span>
-      </div>
-
-      <div class="bibtex-box">
-        <button class="copy-btn" onclick="copyBibtex()">Copy</button>
-<pre id="bibtexText">@article{sahraneshinsamani2026qr8,
-  title   = {Mixed-Precision {Cholesky-QR} with {INT8} Initialization and {FP64} Refinement for Very Tall Matrices on Heterogeneous {GPUs}},
-  author  = {Sahraneshinsamani, Nima and Aliaga, Jos{\'e} I. and Catal{\'a}n, Sandra and Herrero, Jos{\'e} R.},
-  journal = {SIAM Journal on Scientific Computing (SISC)},
-  note    = {Submitted, Special Section on Iterative and Multigrid Methods},
-  year    = {2026}
-}</pre>
-      </div>
-    </section>
-
     <!-- FOOTER -->
     <footer>
       <div>QR8: Mixed-Precision INT8/FP64 Cholesky-QR on GPUs</div>
-      <div style="font-size: 0.8rem; color: var(--ink-faint);">
+      <div style="font-size: 0.8rem; color: var(--ink-faint); margin-top: 0.4rem;">
         Released under the QR8 Beerware License, Revision 42. Hosted on GitHub Pages.
       </div>
-      <div class="footer-calligraphy" lang="fa" dir="rtl">جبر · عدد · پایداری</div>
     </footer>
 
   </div>
 
   <script>
-    // Tab switcher
-    function showFigure(id) {
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      document.querySelectorAll('.figure-display').forEach(fig => fig.classList.remove('active'));
-      
-      const targetFig = document.getElementById('fig-' + id);
-      if (targetFig) targetFig.classList.add('active');
-      
-      event.target.classList.add('active');
-    }
+    // ----------------------------------------------------
+    // THREE.JS 3D INTERACTIVE LAB
+    // ----------------------------------------------------
+    (function init3DLab() {
+      const canvas = document.getElementById('three-canvas');
+      const container = canvas.parentElement;
 
-    // Copy BibTeX
-    function copyBibtex() {
-      const text = document.getElementById('bibtexText').innerText;
-      navigator.clipboard.writeText(text).then(() => {
-        const btn = document.querySelector('.copy-btn');
-        btn.innerText = 'Copied!';
-        setTimeout(() => btn.innerText = 'Copy', 2000);
-      });
-    }
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0e1319);
+      scene.fog = new THREE.FogExp2(0x0e1319, 0.045);
 
-    // Conditioning Simulator Toy
-    const slider = document.getElementById('kappaSlider');
-    const kappaDisplay = document.getElementById('kappaDisplay');
-    const gramCond = document.getElementById('gramCond');
-    const l1Error = document.getElementById('l1Error');
-    const l2Error = document.getElementById('l2Error');
-    const refinePasses = document.getElementById('refinePasses');
-    const stabilityStatus = document.getElementById('stabilityStatus');
+      const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+      camera.position.set(4.5, 3.8, 5.5);
 
-    const supers = ["⁰","¹","²","³","⁴","⁵","⁶","⁷","⁸","⁹"];
-    function formatExp(n) {
-      const s = Math.round(n).toString();
-      return s.split('').map(c => supers[parseInt(c)] || c).join('');
-    }
+      const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: false });
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    function updateSimulation() {
-      const val = parseFloat(slider.value);
-      kappaDisplay.textContent = '10' + formatExp(val);
-      
-      const gramExp = 2 * val;
-      gramCond.textContent = '10' + formatExp(gramExp);
-      
-      const epsL1 = 1.0 / 127.0;
-      const epsL2 = epsL1 / 254.0;
-      
-      const delta1 = Math.pow(10, val) * epsL1;
-      const delta2 = Math.pow(10, val) * epsL2;
-      
-      l1Error.textContent = delta1 < 1.0 ? delta1.toExponential(1) : '≥ 1.0 (Sat)';
-      l2Error.textContent = delta2 < 1.0 ? delta2.toExponential(1) : '≥ 1.0 (Sat)';
-      
-      if (val <= 2) {
-        refinePasses.textContent = '0–1 Pass';
-        stabilityStatus.textContent = 'High Precision Direct';
-        stabilityStatus.className = 'metric-status status-safe';
-      } else if (val <= 4) {
-        refinePasses.textContent = '1 Pass';
-        stabilityStatus.textContent = 'L2 Single Refinement';
-        stabilityStatus.className = 'metric-status status-safe';
-      } else if (val <= 8) {
-        refinePasses.textContent = '2 Passes';
-        stabilityStatus.textContent = 'Adaptive Refinement';
-        stabilityStatus.className = 'metric-status status-safe';
-      } else if (val <= 10) {
-        refinePasses.textContent = '2–3 Passes + Shift';
-        stabilityStatus.textContent = 'Shifted Stable (s_var)';
-        stabilityStatus.className = 'metric-status status-warn';
-      } else {
-        refinePasses.textContent = 'Cholesky Breakdown';
-        stabilityStatus.textContent = 'Indefinite (κ² > 1/ε)';
-        stabilityStatus.className = 'metric-status status-fail';
+      const controls = new THREE.OrbitControls(camera, canvas);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.08;
+      controls.minDistance = 2.5;
+      controls.maxDistance = 14;
+
+      // Lighting
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+      scene.add(ambientLight);
+
+      const dirLight = new THREE.DirectionalLight(0xffeedd, 0.9);
+      dirLight.position.set(5, 10, 7);
+      scene.add(dirLight);
+
+      // Quantization Grid Floor
+      const gridHelper = new THREE.GridHelper(8, 16, 0x334155, 0x1e293b);
+      gridHelper.position.y = -0.01;
+      scene.add(gridHelper);
+
+      // Integer lattice point dots (INT8 discrete scaffold visualization)
+      const dotGeometry = new THREE.BufferGeometry();
+      const dotCoords = [];
+      for (let x = -3; x <= 3; x += 0.5) {
+        for (let y = 0; y <= 3; y += 0.5) {
+          for (let z = -3; z <= 3; z += 0.5) {
+            dotCoords.push(x, y, z);
+          }
+        }
       }
-    }
+      dotGeometry.setAttribute('position', new THREE.Float32BufferAttribute(dotCoords, 3));
+      const dotMaterial = new THREE.PointsMaterial({ color: 0x2d3748, size: 0.035, transparent: true, opacity: 0.6 });
+      const latticePoints = new THREE.Points(dotGeometry, dotMaterial);
+      scene.add(latticePoints);
 
-    slider.addEventListener('input', updateSimulation);
-    updateSimulation();
+      // Vector Arrows
+      const origin = new THREE.Vector3(0, 0, 0);
+
+      function createVectorMesh(color) {
+        const group = new THREE.Group();
+        const mat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.3, metalness: 0.2 });
+        const shaftGeom = new THREE.CylinderGeometry(0.035, 0.035, 1, 16);
+        const shaft = new THREE.Mesh(shaftGeom, mat);
+        shaft.position.y = 0.5;
+
+        const headGeom = new THREE.ConeGeometry(0.09, 0.25, 16);
+        const head = new THREE.Mesh(headGeom, mat);
+        head.position.y = 1.0;
+
+        group.add(shaft);
+        group.add(head);
+        scene.add(group);
+        return { group, shaft, head, target: new THREE.Vector3(1, 0, 0) };
+      }
+
+      const vec1 = createVectorMesh(0xef4444); // Red: Column 1
+      const vec2 = createVectorMesh(0x3b82f6); // Blue: Column 2
+      const vec3 = createVectorMesh(0x10b981); // Green: Column 3
+
+      // Parallelepiped Mesh connecting vectors
+      const polyGeom = new THREE.BufferGeometry();
+      const polyMat = new THREE.MeshBasicMaterial({
+        color: 0x38bdf8,
+        transparent: true,
+        opacity: 0.18,
+        side: THREE.DoubleSide
+      });
+      const polyMesh = new THREE.Mesh(polyGeom, polyMat);
+      scene.add(polyMesh);
+
+      // State vectors
+      let state = 'ortho'; // 'ortho', 'sheared', 'quantized', 'refined'
+      let currentShear = 0;
+
+      function updateVectorGeometry(vMesh, target) {
+        const len = target.length();
+        if (len < 0.001) return;
+        vMesh.shaft.scale.set(1, Math.max(0.01, len - 0.25), 1);
+        vMesh.shaft.position.y = (len - 0.25) / 2;
+        vMesh.head.position.y = len - 0.125;
+
+        vMesh.group.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), target.clone().normalize());
+      }
+
+      function updateParallelepiped(vA, vB, vC) {
+        const p0 = new THREE.Vector3(0, 0, 0);
+        const pA = vA.clone();
+        const pB = vB.clone();
+        const pC = vC.clone();
+        const pAB = pA.clone().add(pB);
+        const pAC = pA.clone().add(pC);
+        const pBC = pB.clone().add(pC);
+        const pABC = pAB.clone().add(pC);
+
+        const vertices = new Float32Array([
+          // Bottom face
+          p0.x,p0.y,p0.z,  pA.x,pA.y,pA.z,  pAB.x,pAB.y,pAB.z,
+          p0.x,p0.y,p0.z,  pAB.x,pAB.y,pAB.z, pB.x,pB.y,pB.z,
+          // Top face
+          pC.x,pC.y,pC.z,  pAC.x,pAC.y,pAC.z, pABC.x,pABC.y,pABC.z,
+          pC.x,pC.y,pC.z,  pABC.x,pABC.y,pABC.z, pBC.x,pBC.y,pBC.z,
+          // Front
+          p0.x,p0.y,p0.z,  pA.x,pA.y,pA.z,  pAC.x,pAC.y,pAC.z,
+          p0.x,p0.y,p0.z,  pAC.x,pAC.y,pAC.z,  pC.x,pC.y,pC.z,
+          // Back
+          pB.x,pB.y,pB.z,  pAB.x,pAB.y,pAB.z, pABC.x,pABC.y,pABC.z,
+          pB.x,pB.y,pB.z,  pABC.x,pABC.y,pABC.z, pBC.x,pBC.y,pBC.z
+        ]);
+        polyGeom.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+        polyGeom.computeVertexNormals();
+      }
+
+      // Targets for animation
+      let tA = new THREE.Vector3(2.2, 0, 0);
+      let tB = new THREE.Vector3(0, 2.2, 0);
+      let tC = new THREE.Vector3(0, 0, 2.2);
+
+      let curA = tA.clone();
+      let curB = tB.clone();
+      let curC = tC.clone();
+
+      function calculateMetrics() {
+        const nA = curA.clone().normalize();
+        const nB = curB.clone().normalize();
+        const nC = curC.clone().normalize();
+
+        const dotAB = Math.abs(nA.dot(nB));
+        const dotAC = Math.abs(nA.dot(nC));
+        const dotBC = Math.abs(nB.dot(nC));
+
+        const orthoErr = Math.sqrt(dotAB*dotAB + dotAC*dotAC + dotBC*dotBC);
+        
+        // Volume: det([A B C])
+        const vol = Math.abs(curA.clone().cross(curB).dot(curC));
+        const condEst = 1.0 / Math.max(0.0001, (vol / (curA.length() * curB.length() * curC.length())));
+
+        document.getElementById('hud-ortho').textContent = orthoErr.toFixed(4);
+        document.getElementById('hud-vol').textContent = vol.toFixed(3);
+        
+        const condHUD = document.getElementById('hud-cond');
+        if (condEst < 1.3) {
+          condHUD.textContent = 'Well-Conditioned (\u03BA \u2248 1.0)';
+          condHUD.className = 'val';
+        } else if (condEst < 10) {
+          condHUD.textContent = 'Moderately Ill-Conditioned (\u03BA \u2248 ' + condEst.toFixed(1) + ')';
+          condHUD.className = 'val';
+        } else {
+          condHUD.textContent = 'Severely Ill-Conditioned (\u03BA \u2248 ' + condEst.toFixed(1) + ')';
+          condHUD.className = 'val alert';
+        }
+
+        const statHUD = document.getElementById('hud-status');
+        if (state === 'ortho') statHUD.textContent = 'Orthonormal Basis (Ideal)';
+        else if (state === 'sheared') statHUD.textContent = 'Sheared Ill-Conditioned Input';
+        else if (state === 'quantized') statHUD.textContent = 'INT8 Coarse Lattice Snapping';
+        else if (state === 'refined') statHUD.textContent = 'FP64 Refined Basis (\u223C 10\u207B\u00B9\u00B3)';
+      }
+
+      function computeTargets() {
+        const s = currentShear * (Math.PI / 180);
+        // Column 1 stays fixed along X
+        tA.set(2.2, 0, 0);
+        // Column 2 leans towards Column 1
+        tB.set(2.2 * Math.sin(s), 2.2 * Math.cos(s), 0);
+        // Column 3 shears towards Column 1 and 2
+        tC.set(1.1 * Math.sin(s), 1.1 * Math.sin(s), 2.2 * Math.cos(s));
+
+        if (state === 'quantized') {
+          // Snap to discrete 0.4 lattice
+          const snap = (v) => Math.round(v / 0.45) * 0.45;
+          tA.set(snap(tA.x), snap(tA.y), snap(tA.z));
+          tB.set(snap(tB.x), snap(tB.y), snap(tB.z));
+          tC.set(snap(tC.x), snap(tC.y), snap(tC.z));
+        } else if (state === 'refined') {
+          // Exact Gram-Schmidt recovery back to orthonormal
+          tA.set(2.2, 0, 0);
+          tB.set(0, 2.2, 0);
+          tC.set(0, 0, 2.2);
+        }
+      }
+
+      // Slider event
+      document.getElementById('shearSlider').addEventListener('input', (e) => {
+        currentShear = parseFloat(e.target.value);
+        state = currentShear > 0 ? 'sheared' : 'ortho';
+        computeTargets();
+      });
+
+      // Buttons
+      document.getElementById('btn-int8').addEventListener('click', () => {
+        state = 'quantized';
+        computeTargets();
+      });
+
+      document.getElementById('btn-refine').addEventListener('click', () => {
+        state = 'refined';
+        computeTargets();
+      });
+
+      document.getElementById('btn-reset').addEventListener('click', () => {
+        state = 'ortho';
+        currentShear = 0;
+        document.getElementById('shearSlider').value = 0;
+        computeTargets();
+      });
+
+      // Window resize
+      window.addEventListener('resize', () => {
+        const w = container.clientWidth;
+        const h = container.clientHeight;
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+      });
+
+      // Animation Loop
+      function animate() {
+        requestAnimationFrame(animate);
+
+        // Smooth interpolation towards targets
+        curA.lerp(tA, 0.1);
+        curB.lerp(tB, 0.1);
+        curC.lerp(tC, 0.1);
+
+        updateVectorGeometry(vec1, curA);
+        updateVectorGeometry(vec2, curB);
+        updateVectorGeometry(vec3, curC);
+
+        updateParallelepiped(curA, curB, curC);
+
+        controls.update();
+        calculateMetrics();
+        renderer.render(scene, camera);
+      }
+
+      computeTargets();
+      animate();
+    })();
+
+    // ----------------------------------------------------
+    // MATHEMATICAL CONDITIONING SIMULATOR
+    // ----------------------------------------------------
+    (function initConditioningSimulator() {
+      const slider = document.getElementById('kappaSlider');
+      const kappaDisplay = document.getElementById('kappaDisplay');
+      const gramCond = document.getElementById('gramCond');
+      const l1Error = document.getElementById('l1Error');
+      const l2Error = document.getElementById('l2Error');
+      const refinePasses = document.getElementById('refinePasses');
+      const stabilityStatus = document.getElementById('stabilityStatus');
+
+      const supers = ["\u2070","\u00B9","\u00B2","\u00B3","\u2074","\u2075","\u2076","\u2077","\u2078","\u2079"];
+      function formatExp(n) {
+        const s = Math.round(n).toString();
+        return s.split('').map(c => supers[parseInt(c)] || c).join('');
+      }
+
+      function updateSimulation() {
+        const val = parseFloat(slider.value);
+        kappaDisplay.textContent = '10' + formatExp(val);
+        
+        const gramExp = 2 * val;
+        gramCond.textContent = '10' + formatExp(gramExp);
+        
+        const epsL1 = 1.0 / 127.0;
+        const epsL2 = epsL1 / 254.0;
+        
+        const delta1 = Math.pow(10, val) * epsL1;
+        const delta2 = Math.pow(10, val) * epsL2;
+        
+        l1Error.textContent = delta1 < 1.0 ? delta1.toExponential(1) : '\u2265 1.0 (Sat)';
+        l2Error.textContent = delta2 < 1.0 ? delta2.toExponential(1) : '\u2265 1.0 (Sat)';
+        
+        if (val <= 2) {
+          refinePasses.textContent = '0\u20131 Pass';
+          stabilityStatus.textContent = 'High Precision Direct';
+          stabilityStatus.className = 'metric-status status-safe';
+        } else if (val <= 4) {
+          refinePasses.textContent = '1 Pass';
+          stabilityStatus.textContent = 'L2 Single Refinement';
+          stabilityStatus.className = 'metric-status status-safe';
+        } else if (val <= 8) {
+          refinePasses.textContent = '2 Passes';
+          stabilityStatus.textContent = 'Adaptive Refinement';
+          stabilityStatus.className = 'metric-status status-safe';
+        } else if (val <= 10) {
+          refinePasses.textContent = '2\u20133 Passes + Shift';
+          stabilityStatus.textContent = 'Shifted Stable (s_var)';
+          stabilityStatus.className = 'metric-status status-warn';
+        } else {
+          refinePasses.textContent = 'Cholesky Breakdown';
+          stabilityStatus.textContent = 'Indefinite (\u03BA\u00B2 > 1/\u03B5)';
+          stabilityStatus.className = 'metric-status status-fail';
+        }
+      }
+
+      slider.addEventListener('input', updateSimulation);
+      updateSimulation();
+    })();
   </script>
 </body>
 </html>
