@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "description": "Targeted L2 shift/retry validation: conditions where INT8-L2 fails on H200 (n>=1024, kappa>=100000). Tests whether a diagonal shift recovers Cholesky.",
+  "cases": [
+    {"m": 16384, "n": 1024},
+    {"m": 20000, "n": 2000},
+    {"m": 32768, "n": 2048}
+  ],
+  "condition_numbers": [100000.0, 1000000.0, 100000000.0, 10000000000.0],
+  "seeds": [1]
+}

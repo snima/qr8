@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "description": "Dense condition sweep near the observed crossover region (kappa=10..1e4, plus endpoints).",
+  "cases": [
+    {"m": 4096, "n": 64},
+    {"m": 4096, "n": 256},
+    {"m": 20000, "n": 2000}
+  ],
+  "condition_numbers": [1.0, 10.0, 50.0, 100.0, 500.0, 1000.0, 5000.0, 10000.0, 100000.0],
+  "seeds": [1, 2, 3]
+}

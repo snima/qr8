@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "collection": "SuiteSparse Matrix Collection",
+  "collection_url": "https://sparse.tamu.edu/",
+  "license": "CC-BY-4.0",
+  "license_url": "https://creativecommons.org/licenses/by/4.0/",
+  "citations": [
+    "T. A. Davis and Y. Hu, The University of Florida Sparse Matrix Collection, ACM TOMS 38(1), 2011, DOI 10.1145/2049662.2049663.",
+    "S. P. Kolodziej et al., The SuiteSparse Matrix Collection Website Interface, JOSS 4(35), 2019, DOI 10.21105/joss.01244."
+  ],
+  "download_pattern": "https://sparse.tamu.edu/MM/{group}/{name}.tar.gz",
+  "notes": "Matrices are downloaded in Matrix Market form under CC-BY 4.0. Matrix Market comments are preserved in per-matrix metadata. Transposition is an explicit manifest operation used only when the stored matrix is wide; no rows, columns, or values are synthesized.",
+  "matrices": [
+    {"group": "HB", "name": "well1033", "transpose": false, "class": "least-squares, well-conditioned"},
+    {"group": "HB", "name": "illc1033", "transpose": false, "class": "least-squares, ill-conditioned"},
+    {"group": "HB", "name": "well1850", "transpose": false, "class": "least-squares, well-conditioned"},
+    {"group": "HB", "name": "illc1850", "transpose": false, "class": "least-squares, ill-conditioned"},
+    {"group": "HB", "name": "abb313", "transpose": false, "class": "least-squares, application-derived"},
+    {"group": "HB", "name": "ash219", "transpose": false, "class": "least-squares, application-derived"},
+    {"group": "HB", "name": "ash608", "transpose": false, "class": "least-squares, application-derived"},
+    {"group": "HB", "name": "ash958", "transpose": false, "class": "least-squares, application-derived"},
+    {"group": "LPnetlib", "name": "lp_25fv47", "transpose": true, "class": "linear-programming constraint matrix"},
+    {"group": "LPnetlib", "name": "lp_bnl2", "transpose": true, "class": "linear-programming constraint matrix"},
+    {"group": "LPnetlib", "name": "lp_cycle", "transpose": true, "class": "linear-programming constraint matrix"},
+    {"group": "LPnetlib", "name": "lp_degen3", "transpose": true, "class": "linear-programming constraint matrix"}
+  ]
+}

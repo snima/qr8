@@ -1,0 +1,16 @@
+QR8 BEERWARE LICENSE
+Revision 42
+
+Copyright (c) 2026 S. Nima
+
+Permission is granted to use, copy, modify, merge, publish, distribute,
+sublicense, and/or sell copies of QR8 and its documentation, provided that
+this notice is retained in copies or substantial portions of the project.
+
+If we meet someday and you think QR8 was useful, you may buy the author a beer,
+coffee, tea, or equivalent symbolic drink. This is appreciated but not required.
+
+No warranty is given. Use the project at your own risk. The authors are not
+liable for claims, damages, numerical errors, performance losses, hardware
+issues, or other consequences arising from use, modification, distribution,
+or execution of this project.

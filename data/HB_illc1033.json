@@ -1,0 +1,14 @@
+{
+  "id": "HB_illc1033",
+  "source_url": "https://sparse.tamu.edu/MM/HB/illc1033.tar.gz",
+  "archive_sha256": "e656d1ddaedae54c50f781462d6dc2decd006847b15c7f65676395fcd9700810",
+  "output_sha256": "03ed17eab5fa1bb74d9ed85d38ac2d822fe2cdfd0eb9e2f8dd78a00e7b749613",
+  "rows": 1033,
+  "columns": 320,
+  "transpose": false,
+  "class": "least-squares, ill-conditioned",
+  "measured_rank_fp64": 320,
+  "sigma_max_fp64": 2.144354511283516,
+  "sigma_min_fp64": 0.00011352919245509131,
+  "condition_2_fp64": 18888.133218526655
+}

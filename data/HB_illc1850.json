@@ -1,0 +1,14 @@
+{
+  "id": "HB_illc1850",
+  "source_url": "https://sparse.tamu.edu/MM/HB/illc1850.tar.gz",
+  "archive_sha256": "31f09a2fa8e5842985f50b7ef2767bd7c05b56cda300272d2068ceb8fbaef612",
+  "output_sha256": "c99018ed5f98f44f06548050825d2b984dbff280c534b901c68f9aa225c55651",
+  "rows": 1850,
+  "columns": 712,
+  "transpose": false,
+  "class": "least-squares, ill-conditioned",
+  "measured_rank_fp64": 712,
+  "sigma_max_fp64": 2.1233426427397153,
+  "sigma_min_fp64": 0.0015113784362347936,
+  "condition_2_fp64": 1404.9046829260521
+}

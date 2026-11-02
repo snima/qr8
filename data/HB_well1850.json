@@ -1,0 +1,14 @@
+{
+  "id": "HB_well1850",
+  "source_url": "https://sparse.tamu.edu/MM/HB/well1850.tar.gz",
+  "archive_sha256": "88610559a4e9ba0fbfc9c46828bfe65e198b4418409f1f4be835d91a6313c831",
+  "output_sha256": "c507c88d653abe0588752bf80abd5860b12ea90a485e0806d7d3eca06a8c8b86",
+  "rows": 1850,
+  "columns": 712,
+  "transpose": false,
+  "class": "least-squares, well-conditioned",
+  "measured_rank_fp64": 712,
+  "sigma_max_fp64": 1.7943279903610947,
+  "sigma_min_fp64": 0.016119679960796825,
+  "condition_2_fp64": 111.31287933289698
+}

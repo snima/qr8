@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "description": "Controlled spectral tests spanning dimensions, aspect ratios, and conditioning.",
+  "cases": [
+    {"m": 4096, "n": 64},
+    {"m": 4096, "n": 256},
+    {"m": 8192, "n": 512},
+    {"m": 16384, "n": 1024},
+    {"m": 20000, "n": 2000},
+    {"m": 32768, "n": 2048}
+  ],
+  "condition_numbers": [1.0, 100.0, 10000.0, 1000000.0, 100000000.0, 10000000000.0],
+  "seeds": [1, 2, 3]
+}

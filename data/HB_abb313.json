@@ -1,0 +1,10 @@
+{
+  "id": "HB_abb313",
+  "source_url": "https://sparse.tamu.edu/MM/HB/abb313.tar.gz",
+  "archive_sha256": "6fca4ba7c6321c0970b4829347734ef0f85934b321a0eb61405a314c79f6d9a3",
+  "output_sha256": "114bd3593aeb52492bb183f5030280412c25dff1468369cfc8f229abcd630520",
+  "rows": 313,
+  "columns": 176,
+  "transpose": false,
+  "class": "least-squares, application-derived"
+}

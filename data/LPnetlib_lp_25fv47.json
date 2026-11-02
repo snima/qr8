@@ -1,0 +1,14 @@
+{
+  "id": "LPnetlib_lp_25fv47",
+  "source_url": "https://sparse.tamu.edu/MM/LPnetlib/lp_25fv47.tar.gz",
+  "archive_sha256": "395efd1f26f9b3fcac30d9f9c05eb259b2c83ad5f88834b77eee4af66dad6b2a",
+  "output_sha256": "ead682377f136716f16c81cc37c8eb94fe3715ee6c81b8de0d8f52763a8c1464",
+  "rows": 1876,
+  "columns": 821,
+  "transpose": true,
+  "class": "linear-programming constraint matrix",
+  "measured_rank_fp64": 820,
+  "sigma_max_fp64": 436.9181419342482,
+  "sigma_min_fp64": 0.0,
+  "condition_2_fp64": "inf"
+}

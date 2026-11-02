@@ -1,0 +1,10 @@
+{
+  "id": "HB_ash219",
+  "source_url": "https://sparse.tamu.edu/MM/HB/ash219.tar.gz",
+  "archive_sha256": "562890544059e184949ebae8373593b2df5f362b71730373de4a133357c005e3",
+  "output_sha256": "dc4b508db1d6a0ad6af40bac840a5ad6777516f6fe6e10fe51d7ba3772fa961f",
+  "rows": 219,
+  "columns": 85,
+  "transpose": false,
+  "class": "least-squares, application-derived"
+}

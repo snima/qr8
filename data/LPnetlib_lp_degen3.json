@@ -1,0 +1,14 @@
+{
+  "id": "LPnetlib_lp_degen3",
+  "source_url": "https://sparse.tamu.edu/MM/LPnetlib/lp_degen3.tar.gz",
+  "archive_sha256": "edf9f458272ce8d605b8aff7882e9b30ae93064403d72fbed9b5e7c093f34918",
+  "output_sha256": "c0cc484926ae3a253cddad2f6ec3739502bed737a7f87bcc4f7c2daae7ae8e03",
+  "rows": 2604,
+  "columns": 1503,
+  "transpose": true,
+  "class": "linear-programming constraint matrix",
+  "measured_rank_fp64": 1501,
+  "sigma_max_fp64": 54.65094861199627,
+  "sigma_min_fp64": 1.6521873918731534e-15,
+  "condition_2_fp64": 3.3077935881132844e+16
+}

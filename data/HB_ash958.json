@@ -1,0 +1,10 @@
+{
+  "id": "HB_ash958",
+  "source_url": "https://sparse.tamu.edu/MM/HB/ash958.tar.gz",
+  "archive_sha256": "135679c35674dd3939ef78d02172f75d9e9d9cdd4ac00636283febde1e33ff26",
+  "output_sha256": "297d7cf5cd972e26512b1ec11fdd516eb708a31231ef032d9abab5a1743b3e8b",
+  "rows": 958,
+  "columns": 292,
+  "transpose": false,
+  "class": "least-squares, application-derived"
+}

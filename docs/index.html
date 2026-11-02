@@ -4,1020 +4,1036 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <title>QR8 — INT8-initialized Cholesky-QR with FP64 refinement</title>
-
+  <title>QR8: Mixed-Precision INT8/FP64 Cholesky-QR on GPUs</title>
   <meta
     name="description"
-    content="QR8: INT8-initialized Cholesky-QR with FP64 refinement."
+    content="Mixed-Precision Cholesky-QR with INT8 Initialization and FP64 Refinement for Very Tall Matrices on Heterogeneous GPUs (SIAM SISC 2026)."
   />
 
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;600&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300..700;1,8..60,400&display=swap"
     rel="stylesheet"
   />
 
+  <!-- MathJax for KaTeX/LaTeX rendering -->
   <script>
     window.MathJax = {
       tex: {
-        inlineMath: [["\\(", "\\)"]],
-        displayMath: [["\\[", "\\]"]]
+        inlineMath: [["\\(", "\\)"], ["$", "$"]],
+        displayMath: [["\\[", "\\]"], ["$$", "$$"]]
       },
-      svg: {
-        fontCache: "global"
-      }
+      svg: { fontCache: "global" }
     };
   </script>
-  <script
-    defer
-    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
-  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 
   <style>
     :root {
-      --paper: #f4ecd9;
-      --paper-light: #fbf6ea;
-      --paper-deep: #eadbbc;
+      --bg: #f9f6ef;
+      --bg-card: #ffffff;
+      --bg-subtle: #f1ebd9;
+      --border: #dfd4bf;
+      --border-dark: #bba988;
 
-      --ink: #24180f;
-      --ink-soft: #604d39;
+      --ink: #1a140e;
+      --ink-muted: #5e5040;
+      --ink-faint: #8d7d6a;
 
-      --rule: #c9b98f;
-      --rule-dark: #9b7a45;
+      --terracotta: #8b3224;
+      --terracotta-soft: rgba(139, 50, 36, 0.08);
+      --navy: #1b3b52;
+      --navy-soft: rgba(27, 59, 82, 0.07);
+      --gold: #b07d2b;
+      --forest: #2d5a3f;
 
-      --gold: #9b6b2f;
-      --castile: #7a2e26;
-      --azulejo: #315d72;
-      --azulejo-soft: rgba(49, 93, 114, 0.36);
+      --serif: "Source Serif 4", Georgia, serif;
+      --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --mono: "Fira Code", monospace;
+      --display: "Cinzel", "Source Serif 4", serif;
+      --nastaliq: "Noto Nastaliq Urdu", serif;
 
-      --shadow: rgba(36, 24, 15, 0.08);
+      --shadow-sm: 0 2px 6px rgba(26, 20, 14, 0.04);
+      --shadow-md: 0 8px 24px rgba(26, 20, 14, 0.07);
+      --shadow-lg: 0 16px 40px rgba(26, 20, 14, 0.1);
 
-      --serif: Georgia, "Times New Roman", Times, serif;
-      --mono: "Courier New", Courier, monospace;
-      --hand: "Bradley Hand", "Segoe Print", "Lucida Handwriting", cursive;
-      --nastaliq: "Noto Nastaliq Urdu", "IranNastaliq", "Noto Naskh Arabic",
-        "Geeza Pro", Tahoma, serif;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     html {
       scroll-behavior: smooth;
-      scroll-padding-top: 1rem;
+      font-size: 16px;
     }
 
     body {
-      margin: 0;
+      background-color: var(--bg);
       color: var(--ink);
-      background:
-        radial-gradient(circle at top, rgba(255, 255, 255, 0.58), transparent 34rem),
-        linear-gradient(180deg, #f8f1df 0%, var(--paper) 46%, var(--paper-deep) 100%);
-      font-family: var(--serif);
+      font-family: var(--sans);
       line-height: 1.68;
-    }
-
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      opacity: 0.13;
       background-image:
-        linear-gradient(rgba(36, 24, 15, 0.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(36, 24, 15, 0.025) 1px, transparent 1px);
-      background-size: 46px 46px;
-      mix-blend-mode: multiply;
+        radial-gradient(ellipse at 50% 0%, rgba(240, 230, 208, 0.7) 0%, transparent 60%),
+        linear-gradient(rgba(26, 20, 14, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(26, 20, 14, 0.02) 1px, transparent 1px);
+      background-size: 100% 100%, 36px 36px, 36px 36px;
+      min-height: 100vh;
     }
 
     ::selection {
-      color: var(--paper-light);
-      background: var(--castile);
+      background: var(--terracotta);
+      color: #fff;
     }
 
     a {
-      color: var(--castile);
-      text-decoration-thickness: 1px;
-      text-underline-offset: 0.18em;
+      color: var(--navy);
+      text-decoration: none;
+      transition: all 0.2s ease;
+      font-weight: 500;
     }
-
     a:hover {
-      color: var(--ink);
+      color: var(--terracotta);
     }
 
-    .page {
-      width: min(1020px, calc(100% - 32px));
-      margin: 28px auto;
-      padding: clamp(24px, 4.5vw, 62px);
-      background: rgba(251, 246, 234, 0.86);
-      border: 1px solid var(--rule);
-      box-shadow: 0 22px 64px var(--shadow);
-      position: relative;
+    /* Container */
+    .container {
+      width: min(1080px, calc(100% - 3rem));
+      margin: 0 auto;
+      padding: 3rem 0 6rem;
     }
 
-    .page::before {
-      content: "";
-      position: absolute;
-      inset: 10px;
-      border: 1px solid rgba(155, 122, 69, 0.42);
-      pointer-events: none;
-    }
-
-    .inner {
-      position: relative;
-      z-index: 1;
-    }
-
+    /* Header & Hero */
     header {
       text-align: center;
-      padding: 34px 0 44px;
-      border-bottom: 1px solid var(--rule);
+      margin-bottom: 3.5rem;
+      padding-bottom: 2.5rem;
+      border-bottom: 1px solid var(--border);
     }
 
-    .small-caps {
-      font-size: 0.82rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--ink-soft);
-    }
-
-    .ornament {
-      width: 118px;
-      height: 18px;
-      margin: 0 auto 16px;
-      position: relative;
-    }
-
-    .ornament::before,
-    .ornament::after {
-      content: "";
-      position: absolute;
-      top: 8px;
-      width: 44px;
-      height: 1px;
-      background: var(--rule-dark);
-    }
-
-    .ornament::before {
-      left: 0;
-    }
-
-    .ornament::after {
-      right: 0;
-    }
-
-    .ornament span {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      width: 10px;
-      height: 10px;
-      border: 1px solid var(--rule-dark);
-      transform: translate(-50%, -50%) rotate(45deg);
-      background: rgba(244, 236, 217, 0.95);
-    }
-
-    .tile-rule {
-      width: min(360px, 80%);
-      height: 10px;
-      margin: 0 auto 22px;
-      border-top: 1px solid rgba(49, 93, 114, 0.38);
-      border-bottom: 1px solid rgba(122, 46, 38, 0.28);
-      background:
-        repeating-linear-gradient(
-          90deg,
-          transparent 0 14px,
-          rgba(49, 93, 114, 0.38) 14px 15px,
-          transparent 15px 29px,
-          rgba(155, 107, 47, 0.34) 29px 30px,
-          transparent 30px 44px,
-          rgba(122, 46, 38, 0.30) 44px 45px
-        );
-    }
-
-    h1 {
-      margin: 18px 0 28px;
-      font-family: Georgia, "Times New Roman", Times, serif;
-      font-size: clamp(5.8rem, 17vw, 12rem);
-      line-height: 0.82;
-      font-weight: 700;
-      letter-spacing: 0.045em;
-      color: var(--ink);
-      font-variant-numeric: lining-nums;
-    }
-h1::after {
-  content: "";
-  display: block;
-  width: min(280px, 62%);
-  height: 1px;
-  margin: 26px auto 22px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    var(--azulejo),
-    var(--gold),
-    var(--castile),
-    transparent
-  );
-}
-    .subtitle {
-      max-width: 720px;
-      margin: 0 auto;
-      font-size: clamp(1.18rem, 2.6vw, 1.72rem);
-      line-height: 1.35;
-      font-weight: 500;
-      color: var(--ink);
-    }
-
-    .note {
-      max-width: 660px;
-      margin: 18px auto 0;
-      color: var(--ink-soft);
-      font-size: 1.02rem;
-    }
-
-    .publication-note {
-      max-width: 660px;
-      margin: 18px auto 0;
-      padding: 14px 16px;
-      border-left: 3px solid var(--azulejo);
-      background: rgba(49, 93, 114, 0.06);
-      font-size: 0.98rem;
-      color: var(--ink);
-    }
-
-    .publication-note .label {
-      display: block;
-      font-size: 0.78rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--azulejo);
-      margin-bottom: 4px;
-      font-weight: 600;
-    }
-
-    .culture-band {
-      width: min(680px, 100%);
-      margin: 26px auto 0;
-      padding: 14px 0 12px;
-      border-top: 1px solid var(--azulejo-soft);
-      border-bottom: 1px solid rgba(122, 46, 38, 0.22);
+    .status-badge-row {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
       flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.6rem;
+      margin-bottom: 1.5rem;
     }
 
-    .spanish-line {
-      font-size: 0.98rem;
-      letter-spacing: 0.15em;
-      text-transform: lowercase;
-      color: var(--azulejo);
-      font-variant: small-caps;
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.28rem 0.75rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      border-radius: 999px;
+      border: 1px solid;
+    }
+    .badge-journal {
+      background: rgba(27, 59, 82, 0.08);
+      border-color: rgba(27, 59, 82, 0.25);
+      color: var(--navy);
+    }
+    .badge-repro {
+      background: rgba(45, 90, 63, 0.08);
+      border-color: rgba(45, 90, 63, 0.25);
+      color: var(--forest);
+    }
+    .badge-gpu {
+      background: rgba(176, 125, 43, 0.1);
+      border-color: rgba(176, 125, 43, 0.3);
+      color: #7a5214;
     }
 
-    .culture-mark {
-      color: var(--gold);
+    .hero-pretitle {
+      font-family: var(--display);
       font-size: 0.95rem;
-    }
-
-    .persian-calligraphy {
-      font-family: var(--nastaliq);
-      font-size: clamp(1.45rem, 4vw, 2.15rem);
-      line-height: 2.1;
-      color: var(--castile);
-      direction: rtl;
-      unicode-bidi: isolate;
-      white-space: nowrap;
-    }
-
-    nav {
-      margin-top: 30px;
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    nav a {
-      display: inline-block;
-      padding: 8px 14px;
-      border: 1px solid var(--rule);
-      color: var(--ink);
-      background: rgba(244, 236, 217, 0.5);
-      text-decoration: none;
-      font-size: 0.94rem;
-    }
-
-    nav a:hover {
-      background: rgba(201, 185, 143, 0.22);
-      border-color: var(--rule-dark);
-    }
-
-    main {
-      padding-top: 28px;
-    }
-
-    section {
-      padding: 32px 0;
-      border-bottom: 1px solid rgba(201, 185, 143, 0.75);
-    }
-
-    section:last-child {
-      border-bottom: 0;
-      padding-bottom: 10px;
-    }
-
-    h2 {
-      margin: 0 0 14px;
-      font-size: clamp(1.55rem, 3vw, 2.15rem);
-      font-weight: 500;
-      line-height: 1.22;
-      color: var(--ink);
-    }
-
-    h3 {
-      margin: 22px 0 8px;
-      font-size: 1.18rem;
-      font-weight: 600;
-    }
-
-    p {
-      margin: 0 0 14px;
-    }
-
-    .lead {
-      font-size: 1.12rem;
-      color: var(--ink);
-    }
-
-    .two-column {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 36px;
-      align-items: start;
-    }
-
-    .box {
-      border: 1px solid var(--rule);
-      background: rgba(244, 236, 217, 0.42);
-      padding: 18px;
-    }
-
-    .box h3:first-child {
-      margin-top: 0;
-    }
-
-    .equation {
-      margin: 20px 0;
-      padding: 16px 18px;
-      text-align: center;
-      border-top: 1px solid rgba(201, 185, 143, 0.72);
-      border-bottom: 1px solid rgba(201, 185, 143, 0.72);
-      font-size: 1.08rem;
-      color: var(--ink);
-    }
-
-    .algorithm {
-      margin: 18px 0 0;
-      padding: 18px;
-      border-left: 3px solid var(--gold);
-      background: rgba(255, 252, 242, 0.52);
-      font-family: var(--mono);
-      font-size: 0.92rem;
-      line-height: 1.55;
-      overflow-x: auto;
-      white-space: pre;
-    }
-
-    .muted {
-      color: var(--ink-soft);
-    }
-
-    .sketch-card {
-      margin-top: 18px;
-      padding: 14px;
-      border: 1px solid var(--rule);
-      background:
-        linear-gradient(rgba(255, 252, 242, 0.64), rgba(255, 252, 242, 0.64)),
-        repeating-linear-gradient(
-          0deg,
-          transparent 0 33px,
-          rgba(49, 93, 114, 0.08) 33px 34px
-        );
-    }
-
-    .sketch-card svg {
-      width: 100%;
-      height: auto;
-      display: block;
-    }
-
-    .sketch-title {
-      font-family: var(--hand);
-      font-size: 30px;
-      fill: var(--ink);
-    }
-
-    .sketch-label {
-      font-family: var(--hand);
-      font-size: 21px;
-      fill: var(--ink-soft);
-    }
-
-    .sketch-small {
-      font-family: var(--hand);
-      font-size: 17px;
-      fill: var(--ink-soft);
-    }
-
-    .sketch-line {
-      fill: none;
-      stroke: var(--ink);
-      stroke-width: 2.2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-
-    .sketch-line-soft {
-      fill: none;
-      stroke: var(--ink-soft);
-      stroke-width: 1.5;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      opacity: 0.72;
-    }
-
-    .sketch-blue {
-      fill: rgba(49, 93, 114, 0.08);
-      stroke: var(--azulejo);
-      stroke-width: 2;
-      stroke-linejoin: round;
-    }
-
-    .sketch-red {
-      fill: rgba(122, 46, 38, 0.07);
-      stroke: var(--castile);
-      stroke-width: 2;
-      stroke-linejoin: round;
-    }
-
-    .sketch-gold {
-      fill: rgba(155, 107, 47, 0.08);
-      stroke: var(--gold);
-      stroke-width: 2;
-      stroke-linejoin: round;
-    }
-
-    .rough {
-      filter: url(#roughPaper);
-    }
-
-    .toy {
-      margin-top: 18px;
-      border: 1px solid var(--rule);
-      background: rgba(255, 252, 242, 0.5);
-      padding: 18px;
-    }
-
-    .slider-row {
-      display: grid;
-      grid-template-columns: 160px 1fr 90px;
-      gap: 14px;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-
-    input[type="range"] {
-      width: 100%;
-      accent-color: var(--castile);
-    }
-
-    .bar {
-      margin-top: 16px;
-      height: 12px;
-      border: 1px solid var(--rule);
-      background: rgba(201, 185, 143, 0.25);
-      overflow: hidden;
-    }
-
-    .bar-fill {
-      height: 100%;
-      width: 25%;
-      background: linear-gradient(90deg, var(--azulejo), var(--gold), var(--castile));
-      transition: width 180ms ease;
-    }
-
-    .toy-output {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-top: 16px;
-    }
-
-    .measure {
-      padding: 14px;
-      border: 1px solid rgba(201, 185, 143, 0.88);
-      background: rgba(244, 236, 217, 0.55);
-    }
-
-    .measure .label {
-      display: block;
-      font-size: 0.78rem;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.25em;
       text-transform: uppercase;
-      color: var(--ink-soft);
+      color: var(--terracotta);
+      margin-bottom: 0.8rem;
+      font-weight: 700;
     }
 
-    .measure .value {
-      display: block;
-      margin-top: 6px;
+    h1.hero-title {
+      font-family: var(--serif);
+      font-size: clamp(2rem, 3.8vw, 2.9rem);
+      font-weight: 700;
+      line-height: 1.25;
+      color: var(--ink);
+      max-width: 950px;
+      margin: 0 auto 1.4rem;
+      letter-spacing: -0.015em;
+    }
+
+    .hero-subtitle {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 1.25rem;
+      color: var(--ink-muted);
+      max-width: 780px;
+      margin: 0 auto 1.8rem;
+    }
+
+    /* Authors */
+    .authors-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1.8rem 2.8rem;
+      margin: 2rem auto;
+      max-width: 900px;
+    }
+    .author-item {
+      text-align: center;
+    }
+    .author-name {
+      font-weight: 600;
+      font-size: 1.05rem;
+      color: var(--ink);
+    }
+    .author-affil {
+      font-size: 0.85rem;
+      color: var(--ink-faint);
+    }
+
+    /* Action Buttons */
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.9rem;
+      margin-top: 2rem;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 1.4rem;
+      font-size: 0.92rem;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      transition: all 0.2s ease;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn-primary {
+      background: var(--navy);
+      color: #fff;
+      border: 1px solid var(--navy);
+      box-shadow: var(--shadow-sm);
+    }
+    .btn-primary:hover {
+      background: #122838;
+      color: #fff;
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--ink);
+      border: 1px solid var(--border-dark);
+      box-shadow: var(--shadow-sm);
+    }
+    .btn-secondary:hover {
+      background: #fff;
+      color: var(--terracotta);
+      border-color: var(--terracotta);
+      transform: translateY(-1px);
+    }
+
+    /* Sections */
+    section {
+      margin-bottom: 4rem;
+    }
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      gap: 0.8rem;
+      margin-bottom: 1.6rem;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 0.6rem;
+    }
+    .section-title {
+      font-family: var(--serif);
+      font-size: 1.65rem;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -0.01em;
+    }
+    .section-tag {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--terracotta);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* Card Layouts */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+      gap: 1.4rem;
+    }
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--border-dark);
+    }
+    .card-title {
+      font-family: var(--serif);
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .card-title .icon {
+      font-size: 1.1rem;
+      color: var(--terracotta);
+    }
+    .card p {
+      font-size: 0.93rem;
+      color: var(--ink-muted);
+      line-height: 1.65;
+    }
+
+    /* Abstract Lead Box */
+    .lead-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--navy);
+      border-radius: var(--radius-md);
+      padding: 1.8rem 2rem;
+      box-shadow: var(--shadow-sm);
+      font-family: var(--serif);
+      font-size: 1.05rem;
+      line-height: 1.78;
+      color: var(--ink);
+      margin-bottom: 2rem;
+    }
+    .lead-box p + p {
+      margin-top: 1rem;
+    }
+
+    /* Interactive Matrix Explorer Widget */
+    .toy-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-dark);
+      border-radius: var(--radius-lg);
+      padding: 2rem 2.4rem;
+      box-shadow: var(--shadow-md);
+      margin: 2.5rem 0;
+    }
+    .toy-header {
+      text-align: center;
+      margin-bottom: 1.8rem;
+    }
+    .toy-header h3 {
+      font-family: var(--serif);
       font-size: 1.35rem;
       color: var(--ink);
+      margin-bottom: 0.3rem;
     }
-
-    .status-list {
+    .toy-header p {
+      font-size: 0.88rem;
+      color: var(--ink-muted);
+    }
+    .toy-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      max-width: 680px;
+      margin: 0 auto 2rem;
+    }
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+    }
+    .slider-row input[type="range"] {
+      flex: 1;
+      height: 8px;
+      border-radius: 4px;
+      accent-color: var(--terracotta);
+      background: var(--bg-subtle);
+      cursor: pointer;
+    }
+    .slider-value {
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: var(--terracotta);
+      min-width: 80px;
+      text-align: right;
+    }
+    .toy-metrics-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin-top: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
     }
-
-    .status {
-      border: 1px solid var(--rule);
-      padding: 14px;
-      background: rgba(244, 236, 217, 0.45);
+    .metric-box {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 1rem;
+      text-align: center;
     }
-
-    .status strong {
-      display: block;
-      margin-bottom: 4px;
-      font-size: 1.02rem;
+    .metric-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--ink-faint);
+      margin-bottom: 0.3rem;
       font-weight: 600;
     }
+    .metric-num {
+      font-family: var(--mono);
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--navy);
+    }
+    .metric-status {
+      font-size: 0.82rem;
+      margin-top: 0.2rem;
+      font-weight: 500;
+    }
+    .status-safe { color: var(--forest); }
+    .status-warn { color: var(--gold); }
+    .status-fail { color: var(--terracotta); }
 
-    footer {
-      margin-top: 30px;
-      padding-top: 20px;
-      border-top: 1px solid var(--rule);
-      color: var(--ink-soft);
-      font-size: 0.92rem;
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      flex-wrap: wrap;
+    /* Visual 3D SVG Sketch */
+    .sketch-card {
+      background: #faf7f0;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1rem;
+      margin-top: 1.5rem;
+      text-align: center;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.03);
+    }
+    .sketch-card svg {
+      max-width: 100%;
+      height: auto;
     }
 
+    /* Figure Gallery Showcase */
+    .figures-tabs-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.8rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .tab-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .tab-btn {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.45rem 0.9rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--ink-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .tab-btn:hover, .tab-btn.active {
+      background: var(--navy);
+      color: #fff;
+      border-color: var(--navy);
+    }
+    .figure-display {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    .figure-display.active {
+      display: block;
+    }
+    .figure-img-wrap {
+      text-align: center;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    .figure-img-wrap img {
+      max-width: 100%;
+      height: auto;
+      max-height: 480px;
+      object-fit: contain;
+    }
+    .figure-caption {
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: var(--ink-muted);
+    }
+    .figure-caption strong {
+      color: var(--ink);
+    }
+
+    /* Terminal Code Block */
+    .terminal-box {
+      background: #191410;
+      color: #ebd9c5;
+      border-radius: var(--radius-md);
+      padding: 1.4rem 1.6rem;
+      font-family: var(--mono);
+      font-size: 0.88rem;
+      line-height: 1.6;
+      overflow-x: auto;
+      position: relative;
+      margin: 1rem 0;
+      box-shadow: var(--shadow-md);
+      border: 1px solid #33261a;
+    }
+    .terminal-box .cmd {
+      color: #78c47b;
+      user-select: all;
+    }
+    .terminal-box .comment {
+      color: #8c7662;
+    }
+
+    /* BibTeX Citation */
+    .bibtex-box {
+      background: #fdfbf7;
+      border: 1px solid var(--border-dark);
+      border-radius: var(--radius-sm);
+      padding: 1.2rem 1.5rem;
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      line-height: 1.6;
+      overflow-x: auto;
+      color: var(--ink);
+      position: relative;
+    }
+    .copy-btn {
+      position: absolute;
+      top: 0.8rem;
+      right: 0.8rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 0.3rem 0.65rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 4px;
+      cursor: pointer;
+      color: var(--ink);
+      transition: all 0.2s ease;
+    }
+    .copy-btn:hover {
+      background: var(--terracotta);
+      color: #fff;
+      border-color: var(--terracotta);
+    }
+
+    /* Footer */
+    footer {
+      border-top: 2px solid var(--border);
+      padding-top: 2.5rem;
+      margin-top: 4rem;
+      text-align: center;
+      color: var(--ink-muted);
+      font-size: 0.88rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      align-items: center;
+    }
     .footer-calligraphy {
       font-family: var(--nastaliq);
-      color: var(--castile);
-      line-height: 2;
-      direction: rtl;
-      unicode-bidi: isolate;
+      font-size: 1.8rem;
+      color: var(--terracotta);
+      margin-top: 0.4rem;
+      letter-spacing: 0.05em;
     }
 
-    @media (max-width: 900px) {
-      .status-list {
-        grid-template-columns: repeat(2, 1fr);
-      }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    @media (max-width: 760px) {
-      .page {
-        width: min(100% - 18px, 1020px);
-        margin: 9px auto;
-        padding: 24px 18px;
-      }
-
-      .page::before {
-        inset: 7px;
-      }
-
-      header {
-        padding-top: 26px;
-      }
-
-      .two-column,
-      .toy-output,
-      .status-list {
-        grid-template-columns: 1fr;
-      }
-
-      .slider-row {
-        grid-template-columns: 1fr;
-        gap: 8px;
-      }
-
-      nav {
-        align-items: stretch;
-      }
-
-      nav a {
-        width: 100%;
-      }
-
-      .culture-band {
-        gap: 8px;
-      }
-
-      .spanish-line {
-        width: 100%;
-      }
-
-      .culture-mark {
-        display: none;
-      }
-
-      .sketch-title {
-        font-size: 24px;
-      }
-
-      .sketch-label {
-        font-size: 18px;
-      }
-
-      .sketch-small {
-        font-size: 15px;
-      }
-
-      footer {
-        display: block;
-      }
-    }
-
-    @media print {
-      body {
-        background: white;
-      }
-
-      body::before {
-        display: none;
-      }
-
-      .page {
-        width: auto;
-        margin: 0;
-        padding: 0;
-        border: 0;
-        box-shadow: none;
-        background: white;
-      }
-
-      .page::before,
-      nav,
-      .toy,
-      .tile-rule {
-        display: none;
-      }
-
-      section {
-        break-inside: avoid;
-      }
+    @media (max-width: 768px) {
+      .container { width: calc(100% - 2rem); }
+      h1.hero-title { font-size: 1.85rem; }
+      .authors-grid { gap: 1.2rem; }
+      .toy-panel { padding: 1.5rem 1.2rem; }
     }
   </style>
 </head>
 
 <body>
-  <div class="page">
-    <div class="inner">
-      <header>
-        <div class="ornament" aria-hidden="true"><span></span></div>
-        <div class="tile-rule" aria-hidden="true"></div>
+  <div class="container">
 
-        <div class="small-caps">A numerical manuscript</div>
+    <!-- HEADER / HERO -->
+    <header>
+      <div class="status-badge-row">
+        <span class="badge badge-journal">SIAM Journal on Scientific Computing (SISC)</span>
+        <span class="badge badge-repro">✓ Reproducibility: Code & Data Available</span>
+        <span class="badge badge-gpu">NVIDIA V100S · RTX A6000 · H200 NVL</span>
+      </div>
 
-        <h1>QR8</h1>
+      <div class="hero-pretitle">Numerical Linear Algebra & GPU Computing</div>
 
-        <p class="subtitle">
-          INT8-initialized Cholesky-QR with FP64 refinement.
+      <h1 class="hero-title">
+        Mixed-Precision Cholesky-QR with INT8 Initialization and FP64 Refinement for Very Tall Matrices on Heterogeneous GPUs
+      </h1>
+
+      <p class="hero-subtitle">
+        Low-bit start. High-precision finish.
+      </p>
+
+      <!-- Authors -->
+      <div class="authors-grid">
+        <div class="author-item">
+          <div class="author-name">Nima Sahraneshinsamani</div>
+          <div class="author-affil">Universitat Jaume I</div>
+        </div>
+        <div class="author-item">
+          <div class="author-name">José I. Aliaga</div>
+          <div class="author-affil">Universitat Jaume I</div>
+        </div>
+        <div class="author-item">
+          <div class="author-name">Sandra Catalán</div>
+          <div class="author-affil">Universitat Jaume I</div>
+        </div>
+        <div class="author-item">
+          <div class="author-name">José R. Herrero</div>
+          <div class="author-affil">Universitat Politècnica de Catalunya</div>
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="hero-actions">
+        <a href="https://github.com/snima/qr8" class="btn btn-primary" target="_blank" rel="noopener">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          GitHub Repository
+        </a>
+        <a href="#quickstart" class="btn btn-secondary">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 17l6-6-6-6m8 12h8"/></svg>
+          Quickstart & Build
+        </a>
+        <a href="#figures" class="btn btn-secondary">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          Key Findings & Figures
+        </a>
+        <a href="#interactive" class="btn btn-secondary">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          Interactive Explorer
+        </a>
+      </div>
+    </header>
+
+    <!-- ABSTRACT & KEY CONTRIBUTIONS -->
+    <section id="abstract">
+      <div class="lead-box">
+        <p>
+          <strong>Abstract.</strong> Conventional Cholesky-QR methods achieve high BLAS-3 efficiency for tall-and-skinny matrices (\(m \gg n\)) on GPUs, but suffer from numerical instability and Cholesky breakdown on ill-conditioned inputs. We present a mixed-precision Cholesky-QR pipeline that forms a coarse initial Gram matrix using 8-bit integer (INT8) matrix multiplication (via Tensor Cores or <code>DP4A</code> vector instructions) with exact INT32 accumulation, followed by FP64 Cholesky factorization and iterative refinement (with optional diagonal shifting) to recover working-precision orthogonality.
         </p>
-
-        <p class="note">
-          A small method in the long shadow of algebra: low-precision structure,
-          high-precision correction, and a quiet concern for orthogonality.
+        <p>
+          We analyze two INT8 initializers: a single-product scheme (L1) and a residual-corrected scheme (L2). Our structured perturbation analysis shows that the first-pass loss of orthogonality grows linearly with the matrix condition number prior to saturation (\(\delta_L = \kappa(A)\varepsilon_L\)), and that L2 quantization reduces the leading residual scale by a factor of \(254\), extending the admissible condition-number range for single-pass refinement by roughly two orders of magnitude. Benchmarks across NVIDIA V100S, RTX A6000, and H200 NVL GPUs on synthetic and SuiteSparse matrices show that shifted adaptive variants preserve double-precision orthogonality up to \(\kappa(A)=10^{10}\)---where standard unshifted <code>FP64-CholQR2</code> breaks down---at a runtime comparable to shifted FP64 Cholesky-QR.
         </p>
+      </div>
 
-        <div class="publication-note">
-          <span class="label">Code availability</span>
-          Implementation and examples will be released after paper publication.
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-title"><span class="icon">⚡</span> Exact INT32 Accumulation</div>
+          <p>
+            By accumulating dot-products exactly into 32-bit signed integers, floating-point summation drift is completely abolished (\(\Delta G_{\mathrm{acc}} = 0\)). The symmetric Gram structure is preserved (\(B_L^T B_L \succeq 0\)), preventing premature indefinite breakdown.
+          </p>
         </div>
 
-        <nav aria-label="Main navigation">
-          <a href="#abstract">abstract</a>
-          <a href="#sketch">3D sketch</a>
-          <a href="#method">method</a>
-          <a href="#toy">conditioning note</a>
-          <a href="#status">status</a>
-          <a href="LICENSE.txt">Beerware license</a>
-        </nav>
-      </header>
-
-      <main>
-        <section id="abstract">
-          <h2>Abstract</h2>
-
-          <p class="lead">
-            QR8 studies a compact mixed-precision route to QR factorization:
-            an INT8-oriented initialization is used to expose a cheap triangular
-            structure, while FP64 refinement restores numerical reliability.
-          </p>
-
+        <div class="card">
+          <div class="card-title"><span class="icon">🎯</span> Two-Slice Residual Correction (L2)</div>
           <p>
-            The aim is not to replace stable dense QR methods in all regimes.
-            The aim is narrower: to examine when a low-precision starting point
-            can be made useful by a carefully placed high-precision correction.
+            The L2 initializer forms a primary INT8 pass plus a quantized residual slice, cutting leading quantization noise by a factor of \(2q = 254\) (\(\approx 48\) dB). This shifts the single-refinement threshold from \(\kappa(A) \approx 10^2\) to \(\kappa(A) \approx 10^4\).
           </p>
+        </div>
 
-          <div class="equation">
-            \( A \approx QR \), with orthogonality repaired by refinement.
-          </div>
-        </section>
-
-        <section id="sketch">
-          <h2>3D working sketch</h2>
-
+        <div class="card">
+          <div class="card-title"><span class="icon">🛡️</span> Residual-Variance Shifting</div>
           <p>
-            The drawing below is intentionally rough. It gives the page a
-            notebook feeling while keeping the object scientific: a matrix
-            scaffold, a triangular factor, and a refined orthogonal sheet.
+            A closed-form diagonal shift \(s_{\mathrm{var}} = \frac{m}{12}\sum_{j=1}^n \alpha_{2j}^2\) based on uniform rounding variance eliminates Cholesky breakdowns on ill-conditioned problems, guaranteeing 100% completion up to \(\kappa(A) = 10^{10}\).
           </p>
+        </div>
+      </div>
+    </section>
 
-          <div class="sketch-card">
-            <svg
-              viewBox="0 0 920 420"
-              role="img"
-              aria-labelledby="sketchTitle sketchDesc"
-              xmlns="http://www.w3.org/2000/svg">
-              <title id="sketchTitle">Hand-sketched 3D QR8 workflow</title>
-              <desc id="sketchDesc">
-                A hand-drawn 3D sketch of the QR8 path from an INT8 scaffold to
-                a triangular factor and an FP64-refined orthogonal sheet.
-              </desc>
+    <!-- 3D WORKFLOW SKETCH -->
+    <section id="sketch">
+      <div class="section-header">
+        <h2 class="section-title">The Mixed-Precision Pipeline</h2>
+        <span class="section-tag">Architecture</span>
+      </div>
 
-              <defs>
-                <filter id="roughPaper">
-                  <feTurbulence
-                    type="fractalNoise"
-                    baseFrequency="0.018"
-                    numOctaves="2"
-                    seed="8"
-                    result="noise"
-                  />
-                  <feDisplacementMap
-                    in="SourceGraphic"
-                    in2="noise"
-                    scale="1.15"
-                  />
-                </filter>
+      <div class="sketch-card">
+        <svg viewBox="0 0 920 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mixed precision pipeline workflow">
+          <defs>
+            <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#1b3b52" />
+            </marker>
+          </defs>
 
-                <marker
-                  id="arrowHead"
-                  markerWidth="10"
-                  markerHeight="10"
-                  refX="8"
-                  refY="3"
-                  orient="auto"
-                  markerUnits="strokeWidth">
-                  <path d="M0,0 L0,6 L9,3 z" fill="#24180f" />
-                </marker>
-              </defs>
+          <!-- Input Matrix A -->
+          <rect x="30" y="50" width="80" height="240" rx="4" fill="#f4ebd9" stroke="#b07d2b" stroke-width="2"/>
+          <text x="70" y="175" text-anchor="middle" font-family="Source Serif 4" font-weight="700" font-size="20" fill="#1a140e">A</text>
+          <text x="70" y="200" text-anchor="middle" font-family="Inter" font-size="12" fill="#5e5040">m × n</text>
+          <text x="70" y="218" text-anchor="middle" font-family="Inter" font-size="11" fill="#8b3224">FP64</text>
 
-              <rect
-                x="18"
-                y="18"
-                width="884"
-                height="384"
-                rx="2"
-                fill="none"
-                stroke="rgba(155, 122, 69, 0.35)"
-                stroke-width="1.2"
-              />
+          <!-- Arrow 1 -->
+          <line x1="120" y1="170" x2="175" y2="170" stroke="#1b3b52" stroke-width="2" marker-end="url(#arrow)"/>
+          <text x="148" y="160" text-anchor="middle" font-family="Inter" font-size="11" font-weight="600" fill="#1b3b52">Quantize</text>
 
-              <g class="rough">
-                <text x="58" y="62" class="sketch-title">
-                  QR8 notebook view
-                </text>
+          <!-- Step 1: INT8 GEMM -->
+          <rect x="185" y="80" width="170" height="180" rx="6" fill="#fff" stroke="#1b3b52" stroke-width="2" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.06))"/>
+          <rect x="185" y="80" width="170" height="36" rx="6 6 0 0" fill="#1b3b52"/>
+          <text x="270" y="103" text-anchor="middle" font-family="Inter" font-weight="700" font-size="13" fill="#fff">Stage 1: Coarse Gram</text>
+          <text x="270" y="140" text-anchor="middle" font-family="Source Serif 4" font-size="15" fill="#1a140e">\( \tilde{G} = \alpha^2 B^T B \)</text>
+          <text x="270" y="170" text-anchor="middle" font-family="Fira Code" font-size="11" fill="#8b3224">cublasGemmEx (INT8)</text>
+          <text x="270" y="195" text-anchor="middle" font-family="Inter" font-size="11" fill="#2d5a3f">Exact INT32 Accum</text>
+          <text x="270" y="220" text-anchor="middle" font-family="Inter" font-size="11" fill="#5e5040">Optional Shift \(s_{\mathrm{var}} I\)</text>
 
-                <text x="62" y="91" class="sketch-small">
-                  low precision scaffold → triangular spine → FP64 check
-                </text>
+          <!-- Arrow 2 -->
+          <line x1="365" y1="170" x2="420" y2="170" stroke="#1b3b52" stroke-width="2" marker-end="url(#arrow)"/>
 
-                <!-- Left 3D block: A -->
-                <polygon
-                  class="sketch-blue"
-                  points="88,136 222,164 222,292 88,264"
-                />
-                <polygon
-                  class="sketch-gold"
-                  points="88,136 143,92 277,120 222,164"
-                />
-                <polygon
-                  class="sketch-red"
-                  points="222,164 277,120 277,248 222,292"
-                />
+          <!-- Step 2: FP64 Cholesky & Solve -->
+          <rect x="430" y="80" width="170" height="180" rx="6" fill="#fff" stroke="#b07d2b" stroke-width="2" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.06))"/>
+          <rect x="430" y="80" width="170" height="36" rx="6 6 0 0" fill="#b07d2b"/>
+          <text x="515" y="103" text-anchor="middle" font-family="Inter" font-weight="700" font-size="13" fill="#fff">Stage 2: Factor & Solve</text>
+          <text x="515" y="140" text-anchor="middle" font-family="Source Serif 4" font-size="15" fill="#1a140e">\( \tilde{G} = R_0^T R_0 \)</text>
+          <text x="515" y="170" text-anchor="middle" font-family="Fira Code" font-size="11" fill="#1b3b52">dpotrf (FP64)</text>
+          <text x="515" y="200" text-anchor="middle" font-family="Source Serif 4" font-size="15" fill="#1a140e">\( Q_0 = A R_0^{-1} \)</text>
+          <text x="515" y="230" text-anchor="middle" font-family="Fira Code" font-size="11" fill="#1b3b52">dtrsm (FP64)</text>
 
-                <path
-                  class="sketch-line-soft"
-                  d="M115 142 L115 270 M142 148 L142 276 M169 154 L169 282 M196 159 L196 287"
-                />
-                <path
-                  class="sketch-line-soft"
-                  d="M89 166 L222 194 M89 197 L222 225 M89 228 L222 256"
-                />
-                <path
-                  class="sketch-line"
-                  d="M88 136 L222 164 L277 120 M222 164 L222 292 L88 264 Z M222 292 L277 248 L277 120"
-                />
+          <!-- Arrow 3 -->
+          <line x1="610" y1="170" x2="665" y2="170" stroke="#1b3b52" stroke-width="2" marker-end="url(#arrow)"/>
 
-                <text x="116" y="330" class="sketch-label">
-                  A
-                </text>
-                <text x="74" y="354" class="sketch-small">
-                  INT8-oriented scaffold
-                </text>
+          <!-- Step 3: Adaptive Refinement -->
+          <rect x="675" y="80" width="200" height="180" rx="6" fill="#fff" stroke="#2d5a3f" stroke-width="2" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.06))"/>
+          <rect x="675" y="80" width="200" height="36" rx="6 6 0 0" fill="#2d5a3f"/>
+          <text x="775" y="103" text-anchor="middle" font-family="Inter" font-weight="700" font-size="13" fill="#fff">Stage 3: FP64 Polish</text>
+          <text x="775" y="140" text-anchor="middle" font-family="Inter" font-size="12" fill="#1a140e">Check \( \|Q_k^TQ_k - I\| \le \tau \)</text>
+          <text x="775" y="170" text-anchor="middle" font-family="Source Serif 4" font-size="14" fill="#2d5a3f">\( G_k = Q_k^T Q_k = R_{k+1}^T R_{k+1} \)</text>
+          <text x="775" y="200" text-anchor="middle" font-family="Source Serif 4" font-size="14" fill="#2d5a3f">\( Q_{k+1} = Q_k R_{k+1}^{-1} \)</text>
+          <text x="775" y="230" text-anchor="middle" font-family="Inter" font-weight="600" font-size="12" fill="#8b3224">Working-Precision \( \sim 10^{-13} \)</text>
+        </svg>
+      </div>
+    </section>
 
-                <!-- Arrow to R -->
-                <path
-                  class="sketch-line"
-                  marker-end="url(#arrowHead)"
-                  d="M306 204 C340 191, 363 191, 394 204"
-                />
-                <text x="304" y="175" class="sketch-small">
-                  form Gram structure
-                </text>
+    <!-- INTERACTIVE EXPLORER WIDGET -->
+    <section id="interactive">
+      <div class="section-header">
+        <h2 class="section-title">Interactive Conditioning Explorer</h2>
+        <span class="section-tag">Simulation</span>
+      </div>
 
-                <!-- Center triangular factor: R -->
-                <polygon
-                  class="sketch-gold"
-                  points="433,126 592,160 433,292"
-                />
-                <polygon
-                  class="sketch-red"
-                  points="433,126 483,94 642,128 592,160"
-                />
-                <polygon
-                  class="sketch-blue"
-                  points="592,160 642,128 483,260 433,292"
-                />
+      <div class="toy-panel">
+        <div class="toy-header">
+          <h3>Gram Conditioning & Error Amplification Simulator</h3>
+          <p>
+            Drag the condition number \(\kappa(A)\) slider to observe how the Gram matrix condition number grows quadratically, how INT8 quantization error scales, and how many refinement passes are required to achieve machine precision.
+          </p>
+        </div>
 
-                <path
-                  class="sketch-line-soft"
-                  d="M457 131 L457 272 M481 136 L481 252 M505 141 L505 232 M529 146 L529 211 M553 151 L553 191"
-                />
-                <path
-                  class="sketch-line-soft"
-                  d="M435 158 L565 185 M435 190 L536 211 M435 222 L508 237 M435 254 L481 264"
-                />
-                <path
-                  class="sketch-line"
-                  d="M433 126 L592 160 L433 292 Z M433 126 L483 94 L642 128 L592 160 M642 128 L483 260 L433 292"
-                />
-
-                <text x="490" y="330" class="sketch-label">
-                  R
-                </text>
-                <text x="424" y="354" class="sketch-small">
-                  triangular Cholesky factor
-                </text>
-
-                <!-- Arrow to Q -->
-                <path
-                  class="sketch-line"
-                  marker-end="url(#arrowHead)"
-                  d="M654 204 C680 190, 704 190, 730 204"
-                />
-                <text x="653" y="175" class="sketch-small">
-                  solve and refine
-                </text>
-
-                <!-- Right 3D sheet: Q -->
-                <polygon
-                  class="sketch-blue"
-                  points="746,116 836,138 836,294 746,272"
-                />
-                <polygon
-                  class="sketch-gold"
-                  points="746,116 782,86 872,108 836,138"
-                />
-                <polygon
-                  class="sketch-red"
-                  points="836,138 872,108 872,264 836,294"
-                />
-
-                <path
-                  class="sketch-line-soft"
-                  d="M767 121 L767 276 M789 126 L789 281 M811 132 L811 286"
-                />
-                <path
-                  class="sketch-line-soft"
-                  d="M746 150 L836 172 M746 183 L836 205 M746 216 L836 238 M746 249 L836 271"
-                />
-                <path
-                  class="sketch-line"
-                  d="M746 116 L836 138 L872 108 M836 138 L836 294 L746 272 Z M836 294 L872 264 L872 108"
-                />
-
-                <text x="783" y="330" class="sketch-label">
-                  Q
-                </text>
-                <text x="720" y="354" class="sketch-small">
-                  FP64-refined orthogonal sheet
-                </text>
-
-                <!-- Refinement loop -->
-                <path
-                  class="sketch-line-soft"
-                  marker-end="url(#arrowHead)"
-                  d="M790 82 C705 44, 528 45, 470 82"
-                />
-                <text x="535" y="52" class="sketch-small">
-                  residual and orthogonality check
-                </text>
-
-                <!-- Small axis triad -->
-                <path class="sketch-line-soft" d="M80 386 L132 386" />
-                <path class="sketch-line-soft" d="M80 386 L80 334" />
-                <path class="sketch-line-soft" d="M80 386 L113 357" />
-                <text x="138" y="391" class="sketch-small">x</text>
-                <text x="70" y="329" class="sketch-small">z</text>
-                <text x="118" y="354" class="sketch-small">y</text>
-              </g>
-            </svg>
+        <div class="toy-controls">
+          <div class="slider-row">
+            <span style="font-weight:600; font-size:0.95rem;">Matrix Condition \(\kappa(A)\):</span>
+            <input type="range" id="kappaSlider" min="1" max="11" step="0.5" value="3" />
+            <div class="slider-value" id="kappaDisplay">10³</div>
           </div>
-        </section>
+        </div>
 
-        <section id="method">
-          <h2>Method</h2>
-
-          <div class="two-column">
-            <div>
-              <p>
-                QR8 follows the Cholesky-QR idea: form a Gram matrix, factor it,
-                and obtain the orthogonal factor through a triangular solve.
-                The distinctive point is the use of a low-precision initializer
-                before refinement.
-              </p>
-
-              <p>
-                In practical terms, QR8 treats the low-precision stage as a
-                scaffold. The final judgment is made in higher precision, where
-                loss of orthogonality and residual error can be measured.
-              </p>
-            </div>
-
-            <div class="box">
-              <h3>Principle</h3>
-              <p>
-                Use cheap arithmetic to approach the structure; use careful
-                arithmetic to correct it.
-              </p>
-
-              <h3>Target</h3>
-              <p>
-                A small, inspectable experiment for mixed-precision QR and
-                conditioning-sensitive refinement.
-              </p>
-            </div>
+        <div class="toy-metrics-grid">
+          <div class="metric-box">
+            <div class="metric-label">Gram Condition \(\kappa(A^TA)\)</div>
+            <div class="metric-num" id="gramCond">10⁶</div>
+            <div class="metric-status" id="gramNote">Squaring effect</div>
           </div>
 
-          <pre class="algorithm">Given a matrix A
+          <div class="metric-box">
+            <div class="metric-label">L1 Initial Error \(\delta_{L1}\)</div>
+            <div class="metric-num" id="l1Error">7.8 × 10⁻³</div>
+            <div class="metric-status" id="l1Note">Single INT8 pass</div>
+          </div>
 
-1. Build a low-precision representation of A.
-2. Form an approximate Gram structure.
-3. Compute a triangular Cholesky factor R.
-4. Solve for a provisional Q.
-5. Recheck residual and orthogonality in FP64.
-6. Refine when the conditioning permits it.
+          <div class="metric-box">
+            <div class="metric-label">L2 Initial Error \(\delta_{L2}\)</div>
+            <div class="metric-num" id="l2Error">3.1 × 10⁻⁵</div>
+            <div class="metric-status" id="l2Note">254× noise reduction</div>
+          </div>
 
-Report:
-  ||A - Q R||
-  ||I - Q^T Q||
-  condition estimate
-  precision path</pre>
-        </section>
+          <div class="metric-box">
+            <div class="metric-label">Refinements Required</div>
+            <div class="metric-num" id="refinePasses">1 Pass</div>
+            <div class="metric-status status-safe" id="stabilityStatus">Stable & Refined</div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-        <section id="toy">
-          <h2>Conditioning note</h2>
+    <!-- KEY FINDINGS & FIGURE GALLERY -->
+    <section id="figures">
+      <div class="section-header">
+        <h2 class="section-title">Key Findings & Publication Figures</h2>
+        <span class="section-tag">Empirical Results</span>
+      </div>
 
-          <p>
-            Cholesky-QR is sensitive to conditioning because the Gram matrix
-            squares the condition number. The control below is only a visual
-            note: it shows why refinement becomes more important as the matrix
-            becomes harder.
-          </p>
+      <div class="figures-tabs-container">
+        <div class="tab-buttons">
+          <button class="tab-btn active" onclick="showFigure('quadrant')">Speed-Accuracy Quadrants</button>
+          <button class="tab-btn" onclick="showFigure('zones')">Accuracy Zones</button>
+          <button class="tab-btn" onclick="showFigure('h200')">H200 Phase Breakdown</button>
+          <button class="tab-btn" onclick="showFigure('qonly')">Unrefined Speedup Heatmap</button>
+          <button class="tab-btn" onclick="showFigure('refine')">Refinement Count Heatmap</button>
+          <button class="tab-btn" onclick="showFigure('amplification')">Amplification Theory</button>
+          <button class="tab-btn" onclick="showFigure('gram')">Gram Error Theory</button>
+        </div>
 
-          <div class="toy">
-            <div class="slider-row">
-              <label for="kappaSlider">condition level</label>
+        <!-- Fig: Quadrant -->
+        <div id="fig-quadrant" class="figure-display active">
+          <div class="figure-img-wrap">
+            <img src="images/speed_accuracy_quadrant_dual.png" alt="Speed-Accuracy Quadrants" />
+          </div>
+          <div class="figure-caption">
+            <strong>Figure: Speed-Accuracy Trade-off across Condition Numbers.</strong> 90-trial paired speedup vs. orthogonality error on synthetic matrices. Adaptive INT8-L1 and INT8-L2 maintain double-precision orthogonality (\(\sim 10^{-13}\)) up to \(\kappa(A)=10^{10}\) while achieving up to \(1.28\times\) speedup over standard FP64 Cholesky-QR at \(\kappa(A)=10^2\).
+          </div>
+        </div>
 
-              <input
-                id="kappaSlider"
-                type="range"
-                min="1"
-                max="12"
-                step="1"
-                value="4"
-              />
+        <!-- Fig: Zones -->
+        <div id="fig-zones" class="figure-display">
+          <div class="figure-img-wrap">
+            <img src="images/kappa_accuracy_zones.png" alt="Condition-Number Accuracy Zones" />
+          </div>
+          <div class="figure-caption">
+            <strong>Figure: Condition-Number Operating Envelopes.</strong> Unshifted standard CholeskyQR breaks down past \(\kappa(A) \approx 10^7\) due to \(A^TA\) becoming numerically indefinite. Our residual-variance diagonal shift \(s_{\mathrm{var}}\) extends the stable operating regime across all tested GPUs up to \(\kappa(A)=10^{10}\).
+          </div>
+        </div>
+
+        <!-- Fig: H200 -->
+        <div id="fig-h200" class="figure-display">
+          <div class="figure-img-wrap">
+            <img src="images/phase_breakdown_h200.png" alt="Runtime Phase Breakdown on H200" />
+          </div>
+          <div class="figure-caption">
+            <strong>Figure: Kernel Phase Breakdown on NVIDIA H200 NVL.</strong> Runtime proportion of Gram GEMM (INT8 vs FP64), FP64 Cholesky factorization (dpotrf), and triangular solve (dtrsm). As matrix height \(m\) grows, INT8 GEMM dominates throughput gains, while Amdahl's law governs total end-to-end acceleration.
+          </div>
+        </div>
+
+        <!-- Fig: Q-Only Heatmap -->
+        <div id="fig-qonly" class="figure-display">
+          <div class="figure-img-wrap">
+            <img src="images/qonly_speedup_heatmap.png" alt="Q-Only Speedup Heatmap" />
+          </div>
+          <div class="figure-caption">
+            <strong>Figure: Coarse Basis Speedup Heatmap (\(m \times n\)).</strong> When an unrefined coarse basis suffices (e.g. randomized sketch preconditioning), unrefined INT8 initialization delivers \(2.1\times\)–\(3.7\times\) speedup over FP64-CholQR2 and up to \(10.0\times\) over vendor cuSOLVER Householder QR.
+          </div>
+        </div>
+
+        <!-- Fig: Refinement Count -->
+        <div id="fig-refine" class="figure-display">
+          <div class="figure-img-wrap">
+            <img src="images/refinement_count_heatmap.png" alt="Refinement Count Heatmap" />
+          </div>
+          <div class="figure-caption">
+            <strong>Figure: Required Refinement Passes on H200 NVL.</strong> Heatmap across matrix aspect ratios and condition numbers showing required refinement count. Residual correction (L2) prevents extra passes up to \(\kappa(A) \approx 10^4\).
+          </div>
+        </div>
+
+        <!-- Fig: Amplification -->
+        <div id="fig-amplification" class="figure-display">
+          <div class="figure-img-wrap">
+            <img src="images/kappa_amplification_theory.png" alt="Condition Amplification Theory" />
+          </div>
+          <div class="figure-caption">
+            <strong>Figure: First-Pass Orthogonality Error Amplification.</strong> Comparison of structured perturbation theory bound (\(\delta_L = \kappa(A)\varepsilon_L\)) against measured GPU loss of orthogonality across NVIDIA V100S, RTX A6000, and H200 NVL.
+          </div>
+        </div>
+
+        <!-- Fig: Gram Error -->
+        <div id="fig-gram" class="figure-display">
+          <div class="figure-img-wrap">
+            <img src="images/gram_error_theory.png" alt="Gram Error Theory" />
+          </div>
+          <div class="figure-caption">
+            <strong>Figure: Gram Relative Error: Measured vs Theoretical Bound.</strong> Demonstration that exact INT32 accumulation limits Gram error strictly to quantization error (\(\Delta G_{\mathrm{quant}}\)), completely eliminating accumulation drift.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- QUICKSTART & REPRODUCIBILITY -->
+    <section id="quickstart">
+      <div class="section-header">
+        <h2 class="section-title">Quickstart & Reproducibility</h2>
+        <span class="section-tag">Code & Data</span>
+      </div>
+
+      <p style="margin-bottom: 1rem; color: var(--ink-muted);">
+        The benchmark harness is self-contained with no external dependencies beyond the standard CUDA Toolkit and Python 3. Build and validate on your local GPU in seconds:
+      </p>
+
+      <div class="terminal-box">
+<span class="comment"># 1. Clone repository</span>
+<span class="cmd">git clone https://github.com/snima/qr8.git</span>
+<span class="cmd">cd qr8</span>
+
+<span class="comment"># 2. Compile benchmark harness (native GPU detection)</span>
+<span class="cmd">make</span>
+
+<span class="comment"># Or target a specific architecture:</span>
+<span class="comment"># make CUDA_ARCH=sm_70   # NVIDIA V100 / V100S</span>
+<span class="comment"># make CUDA_ARCH=sm_86   # NVIDIA RTX A6000</span>
+<span class="comment"># make CUDA_ARCH=sm_90   # NVIDIA Hopper H100 / H200 NVL</span>
+
+<span class="comment"># 3. Run validation smoke test</span>
+<span class="cmd">make smoke</span>
+      </div>
+
+      <div class="card" style="margin-top: 1.5rem;">
+        <div class="card-title"><span class="icon">📁</span> Pre-Packaged Benchmark Suites</div>
+        <p>
+          To reproduce the paired synthetic condition-number sweep:
+          <br />
+          <code>python3 scripts/run_suite.py --synthetic-only --synthetic-grid config/synthetic_grid.json --warmups 5 --trials 90 --output both --results results/synthetic_suite</code>
+          <br /><br />
+          To run on real-world SuiteSparse matrix inputs (included in <code>data/</code>):
+          <br />
+          <code>python3 scripts/run_suite.py --datasets-only --datasets-config config/datasets.json --warmups 5 --trials 30 --results results/suitesparse_suite</code>
+        </p>
+      </div>
+    </section>
+
+    <!-- CITATION -->
+    <section id="citation">
+      <div class="section-header">
+        <h2 class="section-title">Citation</h2>
+        <span class="section-tag">BibTeX</span>
+      </div>
+
+      <div class="bibtex-box">
+        <button class="copy-btn" onclick="copyBibtex()">Copy</button>
+<pre id="bibtexText">@article{sahraneshinsamani2026qr8,
+  title   = {Mixed-Precision {Cholesky-QR} with {INT8} Initialization and {FP64} Refinement for Very Tall Matrices on Heterogeneous {GPUs}},
+  author  = {Sahraneshinsamani, Nima and Aliaga, Jos{\'e} I. and Catal{\'a}n, Sandra and Herrero, Jos{\'e} R.},
+  journal = {SIAM Journal on Scientific Computing (SISC)},
+  note    = {Submitted, Special Section on Iterative and Multigrid Methods},
+  year    = {2026}
+}</pre>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+      <div>QR8: Mixed-Precision INT8/FP64 Cholesky-QR on GPUs</div>
+      <div style="font-size: 0.8rem; color: var(--ink-faint);">
+        Released under the QR8 Beerware License, Revision 42. Hosted on GitHub Pages.
+      </div>
+      <div class="footer-calligraphy" lang="fa" dir="rtl">جبر · عدد · پایداری</div>
+    </footer>
+
+  </div>
+
+  <script>
+    // Tab switcher
+    function showFigure(id) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.figure-display').forEach(fig => fig.classList.remove('active'));
+      
+      const targetFig = document.getElementById('fig-' + id);
+      if (targetFig) targetFig.classList.add('active');
+      
+      event.target.classList.add('active');
+    }
+
+    // Copy BibTeX
+    function copyBibtex() {
+      const text = document.getElementById('bibtexText').innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.querySelector('.copy-btn');
+        btn.innerText = 'Copied!';
+        setTimeout(() => btn.innerText = 'Copy', 2000);
+      });
+    }
+
+    // Conditioning Simulator Toy
+    const slider = document.getElementById('kappaSlider');
+    const kappaDisplay = document.getElementById('kappaDisplay');
+    const gramCond = document.getElementById('gramCond');
+    const l1Error = document.getElementById('l1Error');
+    const l2Error = document.getElementById('l2Error');
+    const refinePasses = document.getElementById('refinePasses');
+    const stabilityStatus = document.getElementById('stabilityStatus');
+
+    const supers = ["⁰","¹","²","³","⁴","⁵","⁶","⁷","⁸","⁹"];
+    function formatExp(n) {
+      const s = Math.round(n).toString();
+      return s.split('').map(c => supers[parseInt(c)] || c).join('');
+    }
+
+    function updateSimulation() {
+      const val = parseFloat(slider.value);
+      kappaDisplay.textContent = '10' + formatExp(val);
+      
+      const gramExp = 2 * val;
+      gramCond.textContent = '10' + formatExp(gramExp);
+      
+      const epsL1 = 1.0 / 127.0;
+      const epsL2 = epsL1 / 254.0;
+      
+      const delta1 = Math.pow(10, val) * epsL1;
+      const delta2 = Math.pow(10, val) * epsL2;
+      
+      l1Error.textContent = delta1 < 1.0 ? delta1.toExponential(1) : '≥ 1.0 (Sat)';
+      l2Error.textContent = delta2 < 1.0 ? delta2.toExponential(1) : '≥ 1.0 (Sat)';
+      
+      if (val <= 2) {
+        refinePasses.textContent = '0–1 Pass';
+        stabilityStatus.textContent = 'High Precision Direct';
+        stabilityStatus.className = 'metric-status status-safe';
+      } else if (val <= 4) {
+        refinePasses.textContent = '1 Pass';
+        stabilityStatus.textContent = 'L2 Single Refinement';
+        stabilityStatus.className = 'metric-status status-safe';
+      } else if (val <= 8) {
+        refinePasses.textContent = '2 Passes';
+        stabilityStatus.textContent = 'Adaptive Refinement';
+        stabilityStatus.className = 'metric-status status-safe';
+      } else if (val <= 10) {
+        refinePasses.textContent = '2–3 Passes + Shift';
+        stabilityStatus.textContent = 'Shifted Stable (s_var)';
+        stabilityStatus.className = 'metric-status status-warn';
+      } else {
+        refinePasses.textContent = 'Cholesky Breakdown';
+        stabilityStatus.textContent = 'Indefinite (κ² > 1/ε)';
+        stabilityStatus.className = 'metric-status status-fail';
+      }
+    }
+
+    slider.addEventListener('input', updateSimulation);
+    updateSimulation();
+  </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "id": "LPnetlib_lp_bnl2",
+  "source_url": "https://sparse.tamu.edu/MM/LPnetlib/lp_bnl2.tar.gz",
+  "archive_sha256": "71abf42585169efd9bb77f615c7375ae1dec116f54b394eaaad808340513a4a8",
+  "output_sha256": "254badeed56e3936c12e2ed14b2f9b249329ec4679299aa426954a19be68de13",
+  "rows": 4486,
+  "columns": 2324,
+  "transpose": true,
+  "class": "linear-programming constraint matrix",
+  "measured_rank_fp64": 2324,
+  "sigma_max_fp64": 211.69646300053418,
+  "sigma_min_fp64": 0.02726182622206978,
+  "condition_2_fp64": 7765.307477059463
+}

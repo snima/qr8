@@ -1,0 +1,14 @@
+{
+  "id": "LPnetlib_lp_cycle",
+  "source_url": "https://sparse.tamu.edu/MM/LPnetlib/lp_cycle.tar.gz",
+  "archive_sha256": "59cd4c612d1641ce17721c0a35132d43903201d5a668d402768269e577eed666",
+  "output_sha256": "9b6505732c2dfbed1f9039c516d0a6aa2b049bbd65831f955758772682e7b2aa",
+  "rows": 3371,
+  "columns": 1903,
+  "transpose": true,
+  "class": "linear-programming constraint matrix",
+  "measured_rank_fp64": 1875,
+  "sigma_max_fp64": 2018.6256141514373,
+  "sigma_min_fp64": 7.099928534241016e-16,
+  "condition_2_fp64": 2.8431632859628897e+18
+}

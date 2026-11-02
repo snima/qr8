@@ -1,0 +1,21 @@
+# Build artifacts
+qr8_benchmark
+*.o
+*.a
+*.so
+
+# Results and logs
+results/
+runs/
+*.csv
+*.sqlite
+*.nsys-rep
+*.log
+
+# Python cache
+__pycache__/
+*.pyc
+
+# IDE & OS
+.DS_Store
+.vscode/
